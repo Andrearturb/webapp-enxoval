@@ -650,14 +650,16 @@ Um arquivo de tipos gerado não tem comportamento de runtime para um teste de Vi
 - [ ] **Step 1: Instalar o gerador e criar o script**
 
 ```bash
-docker compose run --rm web npm install -D openapi-typescript
+docker compose run --rm web npm install -D openapi-typescript --legacy-peer-deps
 ```
+(`openapi-typescript@7` declara `peerDependencies: {typescript: "^5.x"}`, mas o scaffold do Vite já instalou TypeScript 6; sem `--legacy-peer-deps` o `npm install` falha com `ERESOLVE`. O pacote só é usado como CLI — nada do projeto importa a API dele — então a divergência de peer não afeta o resultado.)
 
 Em `web/package.json`, no bloco `"scripts"`, acrescente:
 ```json
-"typecheck": "tsc --noEmit",
+"typecheck": "tsc -b",
 "gen:api": "openapi-typescript http://api:8000/api/openapi.json -o src/api/tipos.ts",
 ```
+`tsc -b` (modo *build*, com `-b`), não `tsc --noEmit`: o `tsconfig.json` raiz deste projeto é um arquivo "solução" (`"files": []`, só `"references"`); `tsc --noEmit` sem `-b` não entra nos projetos referenciados e não verifica nada — passa sempre, mesmo com erro de tipo real em algum arquivo. `-b` é o que de fato percorre `tsconfig.app.json`/`tsconfig.node.json` (o mesmo que `npm run build` já usa); cada um já tem `"noEmit": true` na própria config, então não precisa repetir a flag.
 
 - [ ] **Step 2: Garantir que a API está no ar e com a documentação habilitada**
 
@@ -683,6 +685,12 @@ docker compose run --rm web npm run typecheck
 docker compose run --rm web npm run build
 ```
 Expected: os dois rodam sem erro.
+
+Se `npm run build` falhar com `error TS2305: Module '"@testing-library/react"' has no exported member 'screen'` (ou qualquer outro nome re-exportado de `@testing-library/dom`): `@testing-library/dom` é uma *peer dependency* de `@testing-library/react` (não uma dependência direta — confira em `node_modules/@testing-library/react/package.json`), e o `--legacy-peer-deps` usado no Step 1 desliga o auto-install de peers do npm. Instale-a explicitamente:
+```bash
+docker compose run --rm web npm install -D @testing-library/dom --legacy-peer-deps
+```
+e rode o build de novo.
 
 - [ ] **Step 5: Rodar a suíte inteira do front**
 

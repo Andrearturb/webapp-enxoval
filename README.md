@@ -42,8 +42,28 @@ curl -X POST http://localhost:8000/api/v1/enxovais -H 'Content-Type: application
 curl http://localhost:8000/api/v1/enxovais/<id>
 ```
 
+## Front
+
+```bash
+docker compose up -d --build web
+```
+
+- http://localhost:5174
+
+Gerar os tipos da API a partir do OpenAPI (a API precisa estar no ar, com `DOCS_HABILITADO=true`):
+```bash
+docker compose run --rm web npm run gen:api
+```
+
+### Testes
+
+```bash
+docker compose run --rm web npm test
+```
+
 ## Testes
 
 ```bash
 docker compose run --rm api pytest
+docker compose run --rm web npm test
 ```
