@@ -1,6 +1,8 @@
 # Enxoval Inteligente: desenho do MVP
 
-Data: 2026-10-05 · Status: aprovado · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
+Data: 2026-10-05 · Status: aprovado · Última revisão: 2026-10-06
+
+**Estado da implementação:** Etapa 1 (Docker, banco, seed, admin) e Etapa 2 (motor) prontas e na `main`. Etapas 3 (API) e 4 (telas) pendentes; deploy fora deste ciclo. As seções abaixo descrevem o que existe; onde ainda é intenção, está dito. · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
 
 ## 1. Objetivo e contexto
 
@@ -86,8 +88,8 @@ Regra de fronteira: `motor/` não importa banco, HTTP nem SQLAlchemy. `servicos/
 | `fase_roteiro` | código, nome, início e fim (referência: semana de gestação ou mês do bebê), texto, ordem |
 | `item` | id, slug, categoria, nome, para_que_serve, como_escolher, idade_inicio_meses, fase_compra (→ `fase_roteiro`), prioridade_base (`essencial`, `util`, `pode_esperar`), `e_seguranca`, uso_clima (`neutro`, `divide`, `so_frio`), variante_frio e variante_calor (rótulos, para `divide`), `escala_lavagem` (a quantidade segue a fórmula de lavagem), quantidade e unidade_texto (itens sem tamanho), ordem |
 | `item_tamanho` | item, tamanho (`RN`, `P`, `M`, `G`, `GG`), quantidade_base (calibrada para lavar a cada 2 dias), fase_compra opcional (ex.: roupas M compradas de 0 a 3 meses) |
-| `item_regra` | item, condição (`com_carro`, `sem_carro`, `apartamento`, `casa_sem_escada`, `casa_com_escada`, `perfil_quente`, `perfil_moderado`, `perfil_frio`), efeito (`incluir_so_se`, `mudar_prioridade`, `dica`), valor |
-| `janela_tamanho` | tamanho, idade_inicio_dias, idade_fim_dias, peso_referencia |
+| `item_regra` | item, condição (`com_carro`, `sem_carro`, `apartamento`, `casa_sem_escada`, `casa_com_escada`, `perfil_quente`, `perfil_moderado`, `perfil_frio`), efeito (`incluir_so_se`, `mudar_prioridade`, `dica`), valor (texto livre; **falta** restringir ao enum quando o efeito é `mudar_prioridade`) |
+| `janela_tamanho` | tamanho, idade_inicio_dias, idade_fim_dias, peso_referencia. **Falta** `CHECK (idade_fim_dias > idade_inicio_dias)` |
 | `perfil_clima` | código (`quente`, `moderado`, `frio`), nome, descrição, meses_frios, meses_frescos |
 | `estado` | uf, nome, perfil_padrao |
 | `municipio` | código IBGE, nome, nome_busca (sem acento), uf, perfil_excecao (opcional) |
@@ -109,33 +111,43 @@ Regra de fronteira: `motor/` não importa banco, HTTP nem SQLAlchemy. `servicos/
 - **Chave da linha** estável e legível: `<slug>:<tamanho>:<variante>`, com partes vazias quando não se aplicam (ex.: `body:P:frio`, `berco::`).
 - **Linhas órfãs:** se uma mudança de respostas tira uma linha da lista, o registro continua. Ela aparece em "fora da lista atual" enquanto tiver alguma quantidade maior que zero.
 - **Sem usuário/dono.** A coluna de dono entra numa migração futura, junto com o Keycloak.
+- **Duas travas em falta.** `janela_tamanho` aceita fim ≤ início e `item_regra.valor` aceita qualquer texto. Ambas são editáveis no `/admin`, e um erro de digitação ali chegava ao motor. O motor hoje degrada com aviso em vez de quebrar (seção 4), mas as travas ainda devem entrar numa migração.
 
 ### Carga inicial (seed)
 
 - O conteúdo do plano é transcrito para YAML em `api/seed/` (`categorias`, `fases`, `itens`, `marcas`, `perfis`, `estados`, `excecoes_municipios`, `seguranca`). A lista de municípios vem do arquivo público do IBGE, versionado no repositório.
-- O comando `python -m seed` é **idempotente**: faz upsert por chaves naturais (slug, código IBGE, uf) e nunca apaga dados de famílias.
+- O comando `python -m seed` carrega cada grupo **só se a tabela estiver vazia**, e nunca apaga dados de famílias. Assim, item ou marca apagado ou renomeado no admin não volta numa nova execução. `python -m seed --forcar` repõe o que estiver faltando, sem sobrescrever o que existe.
 - Depois da carga, **o banco é a fonte da verdade** e a edição é feita no `/admin`. Toda marca e regra de segurança nasce com `validado = false`.
 
 ## 4. Motor de personalização (`api/app/motor/`)
 
 Funções puras sobre dataclasses. A data de hoje (`hoje`) sempre entra como parâmetro.
 
-Entrada: `Respostas` + `Catalogo` + `hoje`. Saída: `EnxovalCalculado` (linhas por categoria, roteiro, fichas, alertas, resumo).
+Entrada: `Respostas` + `Catalogo` + `hoje`. Saída: `EnxovalCalculado` (linhas por categoria, fichas, roteiro, alertas, resumo, avisos).
+
+Contas com fração usam `fractions.Fraction`, nunca `float`. Um teste garante que o pacote não importa banco nem HTTP.
 
 | Função | Regra |
 |---|---|
 | `resolver_perfil(municipio, estado, correcao)` | correção da família > exceção do município > padrão do estado |
-| `proporcao_frio(data_prevista, janela, perfil)` | percorre cada dia da janela do tamanho; dia em mês frio vale 1, em mês fresco vale 0,5, nos demais vale 0. Devolve a média (0 a 1) |
+| `proporcao_frio(data_prevista, inicio_dias, fim_dias, perfil, incluir_frescos=True)` | percorre cada dia da janela (`fim_dias` exclusivo); dia em mês frio vale 1, em mês fresco vale 0,5, nos demais vale 0. Devolve a média (0 a 1). Recebe dias, e não o objeto janela, para servir também a itens sem tamanho (ano inteiro) |
 | `fator_lavagem(dias)` | `(dias + 1) / 3`. Opções de resposta: todo dia = 1, a cada 2 dias = 2, a cada 3 dias = 3, 2× por semana = 4 |
 | `quantidade(base, fator)` | `ceil(base × fator)` |
-| `dividir_variantes(qtd, p)` | frio = `round(qtd × p)`, calor = `qtd − frio` (o total é preservado) |
-| `avaliar_regras(item, respostas)` | inclusão, prioridade final e dicas. Item de segurança só sai por condição física (`incluir_so_se` com moradia, carro ou clima); orçamento e preferências nunca o removem |
-| `marcas_para(item, orcamento)` | marcas da faixa; se vazia, faixa vizinha com indicação de fallback |
-| `montar_roteiro(data_prevista, hoje)` | fases em datas reais (concepção estimada = DPP − 40 semanas) e fase atual |
+| `dividir_variantes(qtd, p)` | frio = `floor(qtd × p + ½)` (meio para cima; não é o `round()` do Python, que arredonda para o par), calor = `qtd − frio`. O total é preservado por construção |
+| `avaliar_regras(item, respostas)` | inclusão, prioridade final, dicas e avisos de catálogo. Item de segurança só sai por condição física (`incluir_so_se` com moradia, carro ou clima); orçamento e preferências nunca o removem |
+| `marcas_para(marcas, orcamento)` | marcas da faixa, na ordem do catálogo; se vazia, a faixa mais próxima (empate: a mais barata), com `fallback=True` na ficha |
+| `montar_roteiro(fases, data_prevista, hoje)` | fases em datas reais (gestação a partir de DPP − 40 semanas; fases do bebê em meses completos, com fim de mês ajustado) e a fase atual |
 | `alertas_por_idade(regras, data_prevista)` | regras com a data em que passam a valer |
-| `montar_enxoval(...)` | orquestra e gera o resumo ("fica até N dias sem lavar", total faltando, % pronto) e o aviso de volume alto acima de um limite configurável |
+| `montar_enxoval(respostas, catalogo, hoje, limite_volume=40)` | orquestra tudo e gera o resumo ("fica até N dias sem lavar", total de unidades, aviso de volume alto, destacar "já tinha") |
+| `progresso(linhas, marcadas)` | o quanto já está atendido: total, atendidas, faltam, % pronto e as linhas marcadas que saíram da lista. Fica **fora** do `montar_enxoval`, porque o cálculo da lista não conhece o que a família marcou; uma linha nunca conta além da própria quantidade |
 
-Itens `so_frio` entram apenas em tamanhos cuja proporção de frio seja maior que 0. Itens com `uso_clima = divide` geram até duas linhas (frio e calor); a linha com quantidade 0 é omitida.
+Itens `so_frio` entram apenas quando a janela tem ao menos um dia em **mês frio de verdade**; mês "fresco" não basta, e é isso que mantém o gorro fora de Salvador. Itens com `uso_clima = divide` geram até duas linhas (frio e calor); a linha com quantidade 0 é omitida. Itens sem tamanho usam o primeiro ano inteiro (0 a 365 dias) para decidir o clima.
+
+**Fase atual quando as fases se sobrepõem** (a reta final vai até a 42ª semana e invade os primeiros meses do bebê): antes da data prevista vale a primeira fase na ordem, porque a gestação pode passar da data; a partir dela vale a mais avançada, já que arrumar a mala deixou de ser o próximo passo.
+
+**Alertas de segurança** nunca são filtrados nem alterados por resposta alguma. Só os *links* do alerta para itens fora deste enxoval são removidos, para a ficha não apontar para um item que a família não tem (ex.: o portão de escada no alerta da casa, para quem mora em apartamento).
+
+**`avisos` é canal de defeito de catálogo**, não de situação normal: item sem tamanhos nem quantidade, janela de tamanho ausente ou inválida, regra de prioridade com valor inválido. O motor não quebra em nenhum desses casos: devolve o que consegue e avisa, em português. O uso de uma faixa de marca vizinha **não** é aviso, porque é rotineiro (muitos itens só têm marca genérica); isso viaja por item em `Ficha.marcas.fallback` e `Ficha.marcas.faixa`, que é a granularidade que a tela usa.
 
 Os exemplos do plano (ex.: "metade manga longa" no M em Curitiba) são aproximações; o motor segue a conta dia a dia, e os números podem diferir um pouco do texto.
 
@@ -220,15 +232,17 @@ Títulos em **Lora** (600) e texto em **DM Sans**. Cantos arredondados de 14 a 2
 - Cabeçalhos de segurança no Caddy (CSP incluída). Postgres sem porta publicada. API como usuário não-root.
 - Dados mínimos: sem nome, e-mail ou telefone. A exclusão é definitiva.
 
-**Bloqueios de deploy** (precisam estar resolvidos antes de produção): `/admin` protegido pelo papel de admin do Keycloak; conferência de marcas e regras de segurança; política de privacidade (LGPD); confirmação da arquitetura do servidor.
+**Bloqueios de deploy** (precisam estar resolvidos antes de produção): `/admin` protegido pelo papel de admin do Keycloak; conferência de marcas e regras de segurança; política de privacidade (LGPD); confirmação da arquitetura do servidor; as duas travas de banco em falta (seção 3).
+
+**Pendências de qualidade anotadas nas revisões** (não bloqueiam a Etapa 3, mas devem entrar antes do deploy): o aviso de volume alto olha um tamanho por vez e ignora que RN e P convivem na gaveta no primeiro mês; `condicao_vale` não falha alto diante de uma condição nova; falta teste para a regra "nunca chamar `date.today()`"; `Alerta.ativo_ate` e `FaseCalculada.fim` usam convenções de fim diferentes; apagar categoria, fase ou estado em uso mostra erro 500 no admin; a busca de cidade não casa apóstrofo tipográfico nem hífen (corrigir junto com a busca da Etapa 3, movendo `normalizar_busca` para `app/`).
 
 ## 8. Testes
 
 | Camada | Ferramenta | Cobertura |
 |---|---|---|
-| Motor | pytest puro | cada função da seção 4; Curitiba e Salvador com nascimento em junho; virada de ano; fator de lavagem; preservação do total na divisão; propriedade "segurança nunca sai" sobre todas as combinações de respostas |
+| Motor | pytest puro (94 testes) | cada função da seção 4; Curitiba e Salvador com nascimento em junho; virada de ano; 29 de fevereiro; fator de lavagem; preservação do total na divisão; catálogo incompleto; pureza de imports; propriedade "segurança nunca sai" sobre as 432 combinações de respostas |
 | Serviços e API | pytest + httpx + Postgres em container | ciclo de vida do enxoval, linhas, órfãs, erros 404/422, exportações válidas |
-| Seed | pytest | idempotência e integridade referencial |
+| Seed | pytest (51 testes, com Postgres) | carga única por tabela, preservação de edições do admin, erro nomeando o item em YAML inválido, municípios homônimos e integridade referencial |
 | Front | Vitest + Testing Library | questionário, contadores otimistas com desfazer |
 | Ponta a ponta | Playwright + axe | inicial → questionário → planilha → exportação, no celular e no desktop |
 
@@ -237,6 +251,8 @@ Desenvolvimento orientado a testes (TDD) em todas as camadas.
 ## 9. Fora deste MVP
 
 Login e contas (Keycloak), ajuste manual de quantidade, faixas de preço, links de afiliados, compartilhamento só para leitura, deploy na Oracle Cloud, nome final do site.
+
+**Conteúdo a validar** (editável no `/admin`, sem mexer em código): marcas e suas faixas de orçamento, regras de segurança e suas fontes, perfil de clima padrão por estado e as exceções por cidade. Dois pontos já identificados: os perfis frio e moderado estão sem "meses frescos", o que deixa o tamanho M de Curitiba com menos peças de frio do que o plano descreve; e o casaquinho está neutro ao clima, enquanto o texto do plano trata casaco como peça só de frio.
 
 ## 10. Ordem de implementação
 
