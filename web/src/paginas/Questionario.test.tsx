@@ -1,12 +1,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { buscarMunicipios } from '../api/municipios'
+import { criarEnxoval } from '../api/enxovais'
+import { ErroApi } from '../api/cliente'
 import Questionario from './Questionario'
 
 vi.mock('../api/municipios')
 vi.mock('../api/enxovais')
+
+function DestinoPlanilha() {
+  const { id } = useParams()
+  return <p>destino: {id}</p>
+}
 
 function renderEm(caminho: string) {
   const queryClient = new QueryClient()
@@ -15,6 +22,7 @@ function renderEm(caminho: string) {
       <MemoryRouter initialEntries={[caminho]}>
         <Routes>
           <Route path="/questionario/:passo" element={<Questionario />} />
+          <Route path="/enxoval/:id/planilha" element={<DestinoPlanilha />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -66,5 +74,92 @@ describe('Questionario', () => {
     fireEvent.click(screen.getByText('Voltar'))
 
     expect(screen.getByDisplayValue('Curitiba - PR')).toBeInTheDocument()
+  })
+
+  it('completa as 6 perguntas e cria o enxoval', async () => {
+    vi.mocked(buscarMunicipios).mockResolvedValue([
+      { codigo_ibge: 4106902, nome: 'Curitiba', uf: 'PR', perfil_sugerido: 'frio' },
+    ])
+    vi.mocked(criarEnxoval).mockResolvedValue({ id: 'id-teste' })
+    renderEm('/questionario/1')
+
+    fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'curitiba' } })
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    fireEvent.click(screen.getByText('Curitiba - PR'))
+    fireEvent.click(screen.getByText('Avançar'))
+
+    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: '2027-06-15' } })
+    fireEvent.click(screen.getByText('Avançar'))
+
+    fireEvent.click(screen.getByText('Lavo a cada 2 dias'))
+    fireEvent.click(screen.getByText('Avançar'))
+
+    fireEvent.click(screen.getByText('Apartamento'))
+    fireEvent.click(screen.getByText('Sim'))
+    fireEvent.click(screen.getByText('Avançar'))
+
+    fireEvent.click(screen.getByText('Intermediário'))
+    fireEvent.click(screen.getByText('Avançar'))
+
+    fireEvent.click(screen.getByText('Sim'))
+    fireEvent.click(screen.getByText('Concluir'))
+
+    await waitFor(() =>
+      expect(criarEnxoval).toHaveBeenCalledWith(
+        {
+          municipio_codigo: 4106902,
+          data_prevista: '2027-06-15',
+          dias_entre_lavagens: 2,
+          moradia: 'apartamento',
+          tem_carro: true,
+          orcamento: 'intermediario',
+          primeiro_filho: true,
+          correcao_perfil: null,
+        },
+        expect.anything(),
+      ),
+    )
+    await waitFor(() => expect(screen.getByText('destino: id-teste')).toBeInTheDocument())
+  })
+
+  it('mostra o erro da API e mantém as respostas quando falha ao concluir', async () => {
+    vi.mocked(buscarMunicipios).mockResolvedValue([
+      { codigo_ibge: 4106902, nome: 'Curitiba', uf: 'PR', perfil_sugerido: 'frio' },
+    ])
+    vi.mocked(criarEnxoval).mockRejectedValue(
+      new ErroApi('dados_invalidos', 'Confira os dados enviados.', 422),
+    )
+    renderEm('/questionario/1')
+
+    fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'curitiba' } })
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    fireEvent.click(screen.getByText('Curitiba - PR'))
+    fireEvent.click(screen.getByText('Avançar'))
+    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: '2027-06-15' } })
+    fireEvent.click(screen.getByText('Avançar'))
+    fireEvent.click(screen.getByText('Lavo a cada 2 dias'))
+    fireEvent.click(screen.getByText('Avançar'))
+    fireEvent.click(screen.getByText('Apartamento'))
+    fireEvent.click(screen.getByText('Sim'))
+    fireEvent.click(screen.getByText('Avançar'))
+    fireEvent.click(screen.getByText('Intermediário'))
+    fireEvent.click(screen.getByText('Avançar'))
+    fireEvent.click(screen.getByText('Sim'))
+    fireEvent.click(screen.getByText('Concluir'))
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Confira os dados enviados.'),
+    )
+    expect(screen.getByText('Concluir')).toBeEnabled()
+    expect(screen.getByText('Passo 6 de 6')).toBeInTheDocument()
+  })
+
+  it('entrar direto no passo 6 pela URL sem completar os passos anteriores mantém Concluir desabilitado', () => {
+    renderEm('/questionario/6')
+    expect(screen.getByText('Passo 6 de 6')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Sim'))
+
+    expect(screen.getByText('Concluir')).toBeDisabled()
   })
 })

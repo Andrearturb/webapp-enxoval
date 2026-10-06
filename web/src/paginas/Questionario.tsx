@@ -12,10 +12,7 @@ import PassoDataPrevista from './questionario/PassoDataPrevista'
 import PassoFrequenciaLavagem from './questionario/PassoFrequenciaLavagem'
 import PassoMoradia from './questionario/PassoMoradia'
 import PassoOrcamento from './questionario/PassoOrcamento'
-
-function PassoEmConstrucao() {
-  return <p className="text-texto-suave">Em construção.</p>
-}
+import PassoPrimeiroFilho from './questionario/PassoPrimeiroFilho'
 
 const PASSOS: ComponentType<PassoProps>[] = [
   PassoCidade,
@@ -23,7 +20,7 @@ const PASSOS: ComponentType<PassoProps>[] = [
   PassoFrequenciaLavagem,
   PassoMoradia,
   PassoOrcamento,
-  PassoEmConstrucao,
+  PassoPrimeiroFilho,
 ]
 
 function passoDaUrl(valor: string | undefined): number {
