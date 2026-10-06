@@ -336,11 +336,11 @@ Este arquivo é escrito à mão (não via `npx shadcn init`) para não depender 
 
 O scaffold do Vite pode gerar um único `tsconfig.json` com `"compilerOptions"`, ou (em versões mais novas) um `tsconfig.json` que só referencia `tsconfig.app.json` e `tsconfig.node.json`, com as opções de verdade dentro de `tsconfig.app.json`. Abra `web/tsconfig.json`: se ele tiver um bloco `"references"` em vez de `"compilerOptions"`, edite `tsconfig.app.json` (o que inclui `src/`); senão, edite o próprio `tsconfig.json`. Dentro de `"compilerOptions"` do arquivo certo, acrescente:
 ```json
-"baseUrl": ".",
 "paths": {
   "@/*": ["./src/*"]
 },
 ```
+Não acrescente `"baseUrl"` — o TypeScript 6 descontinuou essa opção (`TS5101`); `paths` sem `baseUrl` já resolve relativo ao próprio arquivo `tsconfig`, que é o resultado que queremos.
 
 Em `web/vite.config.ts`, importe `fileURLToPath` e acrescente `resolve.alias`:
 ```ts
