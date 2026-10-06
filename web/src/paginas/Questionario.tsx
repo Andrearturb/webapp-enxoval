@@ -8,6 +8,7 @@ import { BarraProgresso } from './questionario/BarraProgresso'
 import { todosPassosValidos, passoValido } from './questionario/validacao'
 import { TOTAL_PASSOS, type PassoProps, type RespostasParciais } from './questionario/tipos'
 import PassoCidade from './questionario/PassoCidade'
+import PassoDataPrevista from './questionario/PassoDataPrevista'
 
 function PassoEmConstrucao() {
   return <p className="text-texto-suave">Em construção.</p>
@@ -15,7 +16,7 @@ function PassoEmConstrucao() {
 
 const PASSOS: ComponentType<PassoProps>[] = [
   PassoCidade,
-  PassoEmConstrucao,
+  PassoDataPrevista,
   PassoEmConstrucao,
   PassoEmConstrucao,
   PassoEmConstrucao,
