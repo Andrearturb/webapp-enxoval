@@ -40,3 +40,29 @@ describe('todosPassosValidos', () => {
     expect(todosPassosValidos({ ...completas, primeiro_filho: undefined })).toBe(false)
   })
 })
+
+describe('passoValido - passo 2 com intervalo de data', () => {
+  it('é inválido quando a data está antes do mínimo (hoje - 12 meses)', () => {
+    const hoje = new Date()
+    const muitoAntes = new Date(hoje)
+    muitoAntes.setFullYear(muitoAntes.getFullYear() - 2)
+    const dataStr = muitoAntes.toISOString().slice(0, 10)
+    expect(passoValido(2, { data_prevista: dataStr })).toBe(false)
+  })
+
+  it('é inválido quando a data está depois do máximo (hoje + 10 meses)', () => {
+    const hoje = new Date()
+    const muitoDepois = new Date(hoje)
+    muitoDepois.setMonth(muitoDepois.getMonth() + 12)
+    const dataStr = muitoDepois.toISOString().slice(0, 10)
+    expect(passoValido(2, { data_prevista: dataStr })).toBe(false)
+  })
+
+  it('é válido com data dentro do intervalo permitido', () => {
+    const hoje = new Date()
+    const dentroDoIntervalo = new Date(hoje)
+    dentroDoIntervalo.setMonth(dentroDoIntervalo.getMonth() + 5)
+    const dataStr = dentroDoIntervalo.toISOString().slice(0, 10)
+    expect(passoValido(2, { data_prevista: dataStr })).toBe(true)
+  })
+})

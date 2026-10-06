@@ -1,4 +1,4 @@
-import { type ComponentType, useState } from 'react'
+import { type ComponentType, useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../componentes/ui/button'
@@ -29,6 +29,14 @@ function passoDaUrl(valor: string | undefined): number {
   return n
 }
 
+/** Retorna o número do primeiro passo inválido antes de `ate`, ou null se todos válidos. */
+function primeiroPassoIncompletoAntes(respostas: RespostasParciais, ate: number): number | null {
+  for (let p = 1; p < ate; p++) {
+    if (!passoValido(p, respostas)) return p
+  }
+  return null
+}
+
 export default function Questionario() {
   const { passo: passoParam } = useParams()
   const passo = passoDaUrl(passoParam)
@@ -36,9 +44,18 @@ export default function Questionario() {
   const [respostas, setRespostas] = useState<RespostasParciais>({})
   const [erro, setErro] = useState<string | null>(null)
 
+  // Redirecionar para o primeiro passo incompleto se o usuário chegou num passo
+  // avançado sem ter completado os anteriores (reload, URL colada, botão Voltar do browser)
+  useEffect(() => {
+    const incompleto = primeiroPassoIncompletoAntes(respostas, passo)
+    if (incompleto !== null) {
+      navigate(`/questionario/${incompleto}`, { replace: true })
+    }
+  }, [passo, respostas, navigate])
+
   const mutacao = useMutation<EnxovalCriado, ErroApi, RespostasEntrada>({
     mutationFn: criarEnxoval,
-    onSuccess: (criado) => navigate(`/enxoval/${criado.id}/planilha`),
+    onSuccess: (criado) => navigate(`/enxoval/${criado.id}/planilha`, { replace: true }),
     onError: (e) => setErro(e.message),
   })
 
@@ -57,6 +74,7 @@ export default function Questionario() {
 
   function concluir() {
     if (!todosPassosValidos(respostas)) return
+    setErro(null)
     mutacao.mutate({
       municipio_codigo: respostas.municipio_codigo!,
       data_prevista: respostas.data_prevista!,

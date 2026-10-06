@@ -1,11 +1,12 @@
 import { TOTAL_PASSOS, type RespostasParciais } from './tipos'
+import { dataNoIntervalo } from './intervalos'
 
 export function passoValido(passo: number, r: RespostasParciais): boolean {
   switch (passo) {
     case 1:
       return r.municipio_codigo !== undefined
     case 2:
-      return !!r.data_prevista
+      return dataNoIntervalo(r.data_prevista ?? '')
     case 3:
       return r.dias_entre_lavagens !== undefined
     case 4:

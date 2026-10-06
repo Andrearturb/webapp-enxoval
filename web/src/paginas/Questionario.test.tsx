@@ -16,7 +16,7 @@ function DestinoPlanilha() {
 }
 
 function renderEm(caminho: string) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[caminho]}>
@@ -27,6 +27,13 @@ function renderEm(caminho: string) {
       </MemoryRouter>
     </QueryClientProvider>,
   )
+}
+
+/** Data válida para o passo 2: hoje + 5 meses (dentro do intervalo aceito pelo backend) */
+function dataValida(): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() + 5)
+  return d.toISOString().slice(0, 10)
 }
 
 describe('Questionario', () => {
@@ -88,7 +95,8 @@ describe('Questionario', () => {
     fireEvent.click(screen.getByText('Curitiba - PR'))
     fireEvent.click(screen.getByText('Avançar'))
 
-    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: '2027-06-15' } })
+    const data = dataValida()
+    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: data } })
     fireEvent.click(screen.getByText('Avançar'))
 
     fireEvent.click(screen.getByText('Lavo a cada 2 dias'))
@@ -108,7 +116,7 @@ describe('Questionario', () => {
       expect(criarEnxoval).toHaveBeenCalledWith(
         {
           municipio_codigo: 4106902,
-          data_prevista: '2027-06-15',
+          data_prevista: data,
           dias_entre_lavagens: 2,
           moradia: 'apartamento',
           tem_carro: true,
@@ -135,7 +143,7 @@ describe('Questionario', () => {
     await waitFor(() => screen.getByText('Curitiba - PR'))
     fireEvent.click(screen.getByText('Curitiba - PR'))
     fireEvent.click(screen.getByText('Avançar'))
-    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: '2027-06-15' } })
+    fireEvent.change(screen.getByLabelText('Data prevista'), { target: { value: dataValida() } })
     fireEvent.click(screen.getByText('Avançar'))
     fireEvent.click(screen.getByText('Lavo a cada 2 dias'))
     fireEvent.click(screen.getByText('Avançar'))
@@ -154,12 +162,13 @@ describe('Questionario', () => {
     expect(screen.getByText('Passo 6 de 6')).toBeInTheDocument()
   })
 
-  it('entrar direto no passo 6 pela URL sem completar os passos anteriores mantém Concluir desabilitado', () => {
+  it('entrar direto no passo 2 sem completar o passo 1 redireciona para o passo 1', () => {
+    renderEm('/questionario/2')
+    expect(screen.getByText('Passo 1 de 6')).toBeInTheDocument()
+  })
+
+  it('entrar direto no passo 6 sem completar os passos anteriores redireciona para o passo 1', () => {
     renderEm('/questionario/6')
-    expect(screen.getByText('Passo 6 de 6')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('Sim'))
-
-    expect(screen.getByText('Concluir')).toBeDisabled()
+    expect(screen.getByText('Passo 1 de 6')).toBeInTheDocument()
   })
 })

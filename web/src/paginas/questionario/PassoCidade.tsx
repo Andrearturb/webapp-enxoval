@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { buscarMunicipios, type Municipio } from '../../api/municipios'
+import { ErroApi } from '../../api/cliente'
 import { useDebounce } from '../../hooks/useDebounce'
 import { Button } from '../../componentes/ui/button'
 import { Input } from '../../componentes/ui/input'
@@ -20,10 +21,21 @@ export default function PassoCidade({ respostas, onChange }: PassoProps) {
   )
   const buscaDebounced = useDebounce(busca, 300)
 
-  const { data: resultados = [] } = useQuery({
+  // busca ativa: texto tem >=2 chars e cidade ainda não foi escolhida
+  const buscaAtiva = busca.trim().length >= 2 && !cidadeEscolhida
+  const buscaAtivaDebounced = buscaDebounced.trim().length >= 2 && !cidadeEscolhida
+
+  const {
+    data: resultados = [],
+    isFetching,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['municipios', buscaDebounced],
     queryFn: () => buscarMunicipios(buscaDebounced),
-    enabled: buscaDebounced.trim().length >= 2 && !cidadeEscolhida,
+    enabled: buscaAtivaDebounced,
+    retry: 1,
+    placeholderData: keepPreviousData,
   })
 
   function escolher(m: Municipio) {
@@ -52,6 +64,16 @@ export default function PassoCidade({ respostas, onChange }: PassoProps) {
 
   const perfilAtual = respostas.correcao_perfil ?? respostas.perfil_sugerido
 
+  // "Buscando..." aparece tanto durante o debounce quanto durante o fetch
+  const carregando = buscaAtiva && (isFetching || busca !== buscaDebounced)
+
+  const mensagemErro =
+    isError && error instanceof ErroApi
+      ? error.message
+      : isError
+        ? 'Não foi possível buscar cidades. Tente de novo.'
+        : null
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl">Qual é a sua cidade?</h2>
@@ -63,6 +85,17 @@ export default function PassoCidade({ respostas, onChange }: PassoProps) {
         placeholder="Digite o nome da cidade"
         autoComplete="off"
       />
+      {!cidadeEscolhida && carregando && (
+        <p className="text-sm text-texto-suave">Buscando...</p>
+      )}
+      {!cidadeEscolhida && buscaAtiva && !carregando && !isError && resultados.length === 0 && (
+        <p className="text-sm text-texto-suave">Nenhuma cidade encontrada</p>
+      )}
+      {mensagemErro && (
+        <p role="alert" className="text-sm text-alerta-texto">
+          {mensagemErro}
+        </p>
+      )}
       {!cidadeEscolhida && resultados.length > 0 && (
         <ul className="rounded-xl border border-principal-suave bg-superficie">
           {resultados.map((m) => (
