@@ -9,6 +9,7 @@ import { todosPassosValidos, passoValido } from './questionario/validacao'
 import { TOTAL_PASSOS, type PassoProps, type RespostasParciais } from './questionario/tipos'
 import PassoCidade from './questionario/PassoCidade'
 import PassoDataPrevista from './questionario/PassoDataPrevista'
+import PassoFrequenciaLavagem from './questionario/PassoFrequenciaLavagem'
 
 function PassoEmConstrucao() {
   return <p className="text-texto-suave">Em construção.</p>
@@ -17,7 +18,7 @@ function PassoEmConstrucao() {
 const PASSOS: ComponentType<PassoProps>[] = [
   PassoCidade,
   PassoDataPrevista,
-  PassoEmConstrucao,
+  PassoFrequenciaLavagem,
   PassoEmConstrucao,
   PassoEmConstrucao,
   PassoEmConstrucao,
