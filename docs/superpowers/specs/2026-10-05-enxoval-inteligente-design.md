@@ -2,7 +2,7 @@
 
 Data: 2026-10-05 · Status: aprovado · Última revisão: 2026-10-06
 
-**Estado da implementação:** Etapas 1 (Docker, banco, seed, admin), 2 (motor) e 3 (API) prontas. Etapa 4 (exportações em PDF/Excel/CSV) e Etapa 5 (telas) pendentes; deploy fora deste ciclo. As seções abaixo descrevem o que existe; onde ainda é intenção, está dito. · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
+**Estado da implementação:** Etapas 1 (Docker, banco, seed, admin), 2 (motor) e 3 (API) prontas. Etapa 4 (exportações em PDF/Excel/CSV) pendente, adiada para depois das telas. Etapa 5 (telas) em andamento, dividida em 5a–5e (seção 10); 5a (fundação do front) é a próxima a ganhar plano. Deploy fora deste ciclo. As seções abaixo descrevem o que existe; onde ainda é intenção, está dito. · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
 
 ## 1. Objetivo e contexto
 
@@ -174,6 +174,18 @@ Os exemplos do plano (ex.: "metade manga longa" no M em Curitiba) são aproxima�
 
 ## 6. Front
 
+A Etapa 5 (telas) está dividida em sub-etapas, cada uma com seu próprio plano: **5a** fundação (scaffold, tema, roteamento vazio, cliente de API, testes); **5b** questionário; **5c** planilha (a mais arriscada: contadores otimistas); **5d** roteiro, guia dos itens e segurança; **5e** ajustes, página inicial, acessibilidade e testes ponta a ponta.
+
+### Fundação técnica (Etapa 5a)
+
+- **Gerenciador:** npm.
+- **Ambiente de dev:** serviço `web` novo no `docker-compose` (bind mount `./web:/app`, `npm run dev -- --host 0.0.0.0`), no mesmo padrão da `api`. O Vite fala direto com a API via proxy do próprio `vite.config.ts` (`/api` → `http://api:8000`); **Caddy não entra em nenhuma sub-etapa de front — só no ciclo de deploy**, junto com o build de produção.
+- **Tipos da API:** `npm run gen:api` roda `openapi-typescript` contra `/api/openapi.json` (a API precisa estar no ar) e escreve `src/api/tipos.ts`, commitado no git. Build e CI não dependem da API rodando; contrato novo exige rodar o script de novo.
+- **shadcn/ui:** só o `init` na 5a (tokens de tema, `components.json`); cada sub-etapa seguinte adiciona os componentes que precisar.
+- **Fontes:** Lora e DM Sans auto-hospedadas (arquivos `.woff2` no bundle), sem CDN do Google — consistente com a postura de privacidade da seção 7 (sem requisição externa a cada visita).
+- **Roteamento:** React Router, rotas declaráveis (sem loaders); dados vêm do TanStack Query, não do roteador. As 7 rotas abaixo nascem como páginas vazias na 5a; conteúdo real entra nas sub-etapas seguintes.
+- **Testes:** Vitest + Testing Library + jsdom configurados já na 5a, com um teste de fumaça (a rota raiz renderiza sem quebrar). Playwright + axe (ponta a ponta) fica para a 5e.
+
 ### Rotas
 
 | Rota | Conteúdo |
@@ -184,7 +196,7 @@ Os exemplos do plano (ex.: "metade manga longa" no M em Curitiba) são aproxima�
 | `/enxoval/:id/roteiro` | linha do tempo com datas reais e fase atual |
 | `/enxoval/:id/guia`, `/enxoval/:id/guia/:item` | fichas: para que serve, idade, como escolher, marcas da faixa, alertas |
 | `/enxoval/:id/seguranca` | regras por idade e tema, com datas |
-| `/enxoval/:id/ajustes` | editar respostas, exportar, copiar link, apagar meus dados |
+| `/enxoval/:id/ajustes` | editar respostas, copiar link, apagar meus dados. "Exportar" (PDF/Excel/CSV) só entra quando a Etapa 4 existir; até lá, o botão não aparece |
 
 ### As 6 perguntas
 
@@ -256,8 +268,14 @@ Login e contas (Keycloak), ajuste manual de quantidade, faixas de preço, links 
 
 ## 10. Ordem de implementação
 
-1. Docker Compose com o banco, modelos, migrações e seed.
-2. Motor de personalização com testes.
-3. API.
-4. Telas.
-5. Deploy (ciclo futuro, não planejado agora).
+1. Docker Compose com o banco, modelos, migrações e seed. ✅
+2. Motor de personalização com testes. ✅
+3. API. ✅
+4. Telas (Etapa 5), em sub-etapas:
+   - 5a. Fundação do front (scaffold, tema, roteamento vazio, cliente de API, testes).
+   - 5b. Questionário (as 6 perguntas, `POST /enxovais`).
+   - 5c. Planilha (contadores otimistas, filtros, resumo).
+   - 5d. Roteiro, guia dos itens e segurança.
+   - 5e. Ajustes, página inicial, acessibilidade, testes ponta a ponta.
+5. Exportações em PDF, Excel e CSV (Etapa 4) — adiada para depois das telas; ainda sem plano escrito.
+6. Deploy (ciclo futuro, não planejado agora).
