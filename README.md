@@ -16,7 +16,7 @@ docker compose up -d --build
 - API: http://localhost:8010/api/v1/saude
 - Documentação da API: http://localhost:8010/api/docs
 
-Porta diferente de 8010 em uso? Troque `API_PORT` no `.env`.
+Portas 8010 ou 5180 em uso? Troque `API_PORT`/`WEB_PORT` no `.env`.
 
 ## Banco e conteúdo
 
@@ -44,8 +44,28 @@ curl -X POST http://localhost:8010/api/v1/enxovais -H 'Content-Type: application
 curl http://localhost:8010/api/v1/enxovais/<id>
 ```
 
+## Front
+
+```bash
+docker compose up -d --build web
+```
+
+- http://localhost:5180
+
+Gerar os tipos da API a partir do OpenAPI (a API precisa estar no ar, com `DOCS_HABILITADO=true`):
+```bash
+docker compose run --rm web npm run gen:api
+```
+
+### Testes
+
+```bash
+docker compose run --rm web npm test
+```
+
 ## Testes
 
 ```bash
 docker compose run --rm api pytest
+docker compose run --rm web npm test
 ```

@@ -25,5 +25,12 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on:
+      - api
+
 volumes:
   dados_db:
+  node_modules_web:
