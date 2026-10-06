@@ -1,0 +1,5 @@
+- {tamanho: RN, idade_inicio_dias: 0, idade_fim_dias: 30, peso_referencia: até cerca de 4 kg}
+- {tamanho: P, idade_inicio_dias: 0, idade_fim_dias: 90, peso_referencia: null}
+- {tamanho: M, idade_inicio_dias: 90, idade_fim_dias: 180, peso_referencia: null}
+- {tamanho: G, idade_inicio_dias: 180, idade_fim_dias: 270, peso_referencia: null}
+- {tamanho: GG, idade_inicio_dias: 270, idade_fim_dias: 365, peso_referencia: null}

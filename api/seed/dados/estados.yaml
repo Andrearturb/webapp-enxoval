@@ -1,0 +1,27 @@
+- {uf: AC, nome: Acre, perfil_padrao: quente}
+- {uf: AL, nome: Alagoas, perfil_padrao: quente}
+- {uf: AP, nome: Amapá, perfil_padrao: quente}
+- {uf: AM, nome: Amazonas, perfil_padrao: quente}
+- {uf: BA, nome: Bahia, perfil_padrao: quente}
+- {uf: CE, nome: Ceará, perfil_padrao: quente}
+- {uf: DF, nome: Distrito Federal, perfil_padrao: moderado}
+- {uf: ES, nome: Espírito Santo, perfil_padrao: quente}
+- {uf: GO, nome: Goiás, perfil_padrao: moderado}
+- {uf: MA, nome: Maranhão, perfil_padrao: quente}
+- {uf: MT, nome: Mato Grosso, perfil_padrao: quente}
+- {uf: MS, nome: Mato Grosso do Sul, perfil_padrao: moderado}
+- {uf: MG, nome: Minas Gerais, perfil_padrao: moderado}
+- {uf: PA, nome: Pará, perfil_padrao: quente}
+- {uf: PB, nome: Paraíba, perfil_padrao: quente}
+- {uf: PR, nome: Paraná, perfil_padrao: frio}
+- {uf: PE, nome: Pernambuco, perfil_padrao: quente}
+- {uf: PI, nome: Piauí, perfil_padrao: quente}
+- {uf: RJ, nome: Rio de Janeiro, perfil_padrao: quente}
+- {uf: RN, nome: Rio Grande do Norte, perfil_padrao: quente}
+- {uf: RS, nome: Rio Grande do Sul, perfil_padrao: frio}
+- {uf: RO, nome: Rondônia, perfil_padrao: quente}
+- {uf: RR, nome: Roraima, perfil_padrao: quente}
+- {uf: SC, nome: Santa Catarina, perfil_padrao: frio}
+- {uf: SP, nome: São Paulo, perfil_padrao: moderado}
+- {uf: SE, nome: Sergipe, perfil_padrao: quente}
+- {uf: TO, nome: Tocantins, perfil_padrao: quente}

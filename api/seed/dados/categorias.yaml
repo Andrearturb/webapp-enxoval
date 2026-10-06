@@ -1,0 +1,7 @@
+- {slug: roupas, nome: Roupas, ordem: 1}
+- {slug: sono-e-quarto, nome: Sono e quarto, ordem: 2}
+- {slug: higiene-e-banho, nome: Higiene e banho, ordem: 3}
+- {slug: passeio-e-transporte, nome: Passeio e transporte, ordem: 4}
+- {slug: alimentacao, nome: Alimentação, ordem: 5}
+- {slug: seguranca-da-casa, nome: Segurança da casa, ordem: 6}
+- {slug: para-a-mae, nome: Para a mãe, ordem: 7}

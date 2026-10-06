@@ -1,0 +1,57 @@
+# Texto próprio; as bases (SBP, INMETRO, CONTRAN) ainda precisam ser conferidas nas fontes.
+- codigo: inmetro-cordoes
+  tema: geral
+  idade_inicio_meses: 0
+  idade_fim_meses: 12
+  texto: Prefira produtos infantis com selo INMETRO. Nada de cordão no pescoço nem prendedor de chupeta comprido.
+  base: INMETRO
+  itens: [berco, bebe-conforto, carrinho, cadeira-alimentacao, banheira]
+- codigo: sono-seguro
+  tema: sono
+  idade_inicio_meses: 0
+  idade_fim_meses: 12
+  texto: O bebê dorme de barriga para cima, no próprio berço, em colchão firme, sem travesseiro, edredom, protetor de grade ou bichos de pelúcia.
+  base: SBP
+  itens: [berco, colchao-berco, lencol-elastico, saco-dormir, almofada-amamentacao, manta]
+- codigo: transporte-bebe-conforto
+  tema: transporte
+  idade_inicio_meses: 0
+  idade_fim_meses: 12
+  texto: No carro, sempre no bebê conforto, voltado para trás e no banco traseiro, desde a saída da maternidade.
+  base: CONTRAN
+  itens: [bebe-conforto]
+- codigo: banho-e-trocador
+  tema: banho
+  idade_inicio_meses: 0
+  idade_fim_meses: 6
+  texto: Nunca deixe o bebê sozinho no trocador ou na banheira, nem por um instante. A água do banho fica entre 36 e 37 °C.
+  base: SBP
+  itens: [banheira, comoda-trocador]
+- codigo: sling-rosto-visivel
+  tema: transporte
+  idade_inicio_meses: 0
+  idade_fim_meses: 6
+  texto: No sling, o rosto do bebê fica sempre visível e o queixo longe do peito.
+  base: Carregamento ergonômico
+  itens: [sling]
+- codigo: introducao-alimentar
+  tema: alimentacao
+  idade_inicio_meses: 6
+  idade_fim_meses: 9
+  texto: A introdução alimentar começa aos 6 meses, com o bebê sentado e de cinto. Sem mel até 1 ano e sem açúcar até 2 anos.
+  base: SBP
+  itens: [cadeira-alimentacao, kit-introducao, copo-transicao]
+- codigo: casa-antes-de-engatinhar
+  tema: casa
+  idade_inicio_meses: 6
+  idade_fim_meses: 12
+  texto: Antes de o bebê engatinhar, proteja tomadas, gavetas e escadas e fixe os móveis na parede.
+  base: SBP
+  itens: [protetor-tomada, trava-gaveta, portao-seguranca, protetor-quina, comoda-trocador]
+- codigo: andador-e-brinquedos
+  tema: brinquedos
+  idade_inicio_meses: 6
+  idade_fim_meses: 12
+  texto: Andador não é recomendado. Brinquedos para a faixa de 0 a 3 anos, sem peças pequenas.
+  base: SBP, INMETRO
+  itens: []

@@ -1,0 +1,553 @@
+padroes:
+  fases_roupa: &fases_roupa
+    RN: gestacao_7_8m
+    P: gestacao_7_8m
+    M: bebe_0_3m
+    G: bebe_3_6m
+    GG: bebe_6_9m
+  marcas_roupa: &marcas_roupa [Hering Kids, Carter's, Tip Top, Up Baby, Brandili, C&A, Renner, Riachuelo]
+  como_escolher_roupa: &como_roupa Algodão, botões ou zíper na frente, sem laços, fitas ou peças soltas.
+
+itens:
+  # ---------- Roupas ----------
+  - slug: body
+    nome: Body
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    uso_clima: divide
+    variantes: {frio: manga longa, calor: manga curta}
+    escala_lavagem: true
+    tamanhos: {RN: 4, P: 8, M: 7, G: 6, GG: 6}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Peça básica do dia a dia, sozinha no calor ou por baixo no frio.
+    como_escolher: *como_roupa
+    marcas: *marcas_roupa
+  - slug: calca-mijao
+    nome: Calça ou mijão
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    uso_clima: divide
+    variantes: {frio: comprida, calor: curta}
+    escala_lavagem: true
+    tamanhos: {RN: 3, P: 6, M: 5, G: 5, GG: 5}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Completa o body; com pé, dispensa a meia nos primeiros meses.
+    como_escolher: *como_roupa
+    marcas: *marcas_roupa
+  - slug: macacao
+    nome: Macacão
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    uso_clima: divide
+    variantes: {frio: longo com pé, calor: curto}
+    escala_lavagem: true
+    tamanhos: {RN: 2, P: 4, M: 4, G: 3, GG: 3}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Peça única, prática para dormir e sair.
+    como_escolher: *como_roupa
+    marcas: *marcas_roupa
+  - slug: casaquinho
+    nome: Casaquinho
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: util
+    escala_lavagem: true
+    tamanhos: {RN: 1, P: 2, M: 2, G: 2, GG: 2}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Uma camada a mais para noites frescas e ambientes com ar-condicionado.
+    como_escolher: *como_roupa
+    marcas: *marcas_roupa
+  - slug: meias
+    nome: Meias (pares)
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    escala_lavagem: true
+    tamanhos: {RN: 3, P: 6, M: 5, G: 4, GG: 4}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Manter os pés aquecidos quando a roupa não tem pé.
+    como_escolher: Algodão, punho macio que não aperta e sola antiderrapante quando o bebê começar a ficar em pé.
+    marcas: *marcas_roupa
+  - slug: gorro
+    nome: Gorro
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: util
+    uso_clima: so_frio
+    tamanhos: {RN: 1, P: 2, M: 1, G: 1, GG: 1}
+    fases_tamanho: *fases_roupa
+    para_que_serve: Proteger a cabeça em passeios nos meses frios.
+    como_escolher: Malha macia, sem pompom solto nem cordão de amarrar. Não usar para dormir.
+    marcas: *marcas_roupa
+  - slug: manta
+    nome: Manta
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 2
+    unidade: mantas
+    para_que_serve: Envolver o bebê no colo, no carrinho e nas saídas.
+    como_escolher: Leve no calor, mais grossa no frio. Nunca solta dentro do berço na hora de dormir.
+    marcas: [Linhas de loja]
+  - slug: toalha-capuz
+    nome: Toalha com capuz
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    escala_lavagem: true
+    quantidade: 3
+    unidade: toalhas
+    para_que_serve: Secar o bebê depois do banho, cobrindo a cabeça.
+    como_escolher: Algodão macio e absorvente, que seque rápido.
+    marcas: [Linhas de loja]
+  - slug: fralda-pano
+    nome: Fraldas de pano ou paninhos de boca
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    escala_lavagem: true
+    quantidade: 10
+    unidade: unidades
+    para_que_serve: Limpar regurgitação, proteger o ombro e forrar o trocador.
+    como_escolher: Algodão, com bainha bem costurada.
+    marcas: [Linhas de loja]
+  - slug: saco-dormir
+    nome: Saco de dormir
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: util
+    uso_clima: so_frio
+    quantidade: 2
+    unidade: sacos de dormir
+    para_que_serve: Aquecer à noite sem cobertor solto no berço.
+    como_escolher: Do tamanho do bebê, sem capuz, com cava que não deixe a cabeça escorregar para dentro.
+    marcas: [Linhas de loja]
+
+  # ---------- Sono e quarto ----------
+  - slug: berco
+    nome: Berço
+    categoria: sono-e-quarto
+    fase: gestacao_5_7m
+    prioridade: essencial
+    seguranca: true
+    quantidade: 1
+    unidade: berço
+    para_que_serve: Lugar seguro de sono desde o primeiro dia.
+    como_escolher: Selo INMETRO, vão entre as grades de no máximo 6,5 cm e estrado com regulagem de altura.
+    regras:
+      - condicao: apartamento
+        efeito: dica
+        valor: Em apartamento pequeno, um berço compacto ou mini berço com selo INMETRO ocupa menos espaço.
+    marcas: [Tcil, Reller, Matic, Burigotto, Galzerano]
+  - slug: colchao-berco
+    nome: Colchão de berço
+    categoria: sono-e-quarto
+    fase: gestacao_5_7m
+    prioridade: essencial
+    seguranca: true
+    quantidade: 1
+    unidade: colchão
+    para_que_serve: Base firme para o bebê dormir.
+    como_escolher: Firme e do tamanho exato do berço, sem vão nas laterais.
+    marcas: [Ortobom, Castor, Fom]
+  - slug: lencol-elastico
+    nome: Lençol com elástico
+    categoria: sono-e-quarto
+    fase: gestacao_7_8m
+    prioridade: essencial
+    seguranca: true
+    escala_lavagem: true
+    quantidade: 4
+    unidade: lençóis
+    para_que_serve: Forrar o colchão.
+    como_escolher: Bem justo no colchão. No berço, nada de edredom, travesseiro ou protetor de grade.
+    marcas: [Papi, Hering, Linhas de loja]
+  - slug: comoda-trocador
+    nome: Cômoda com trocador
+    categoria: sono-e-quarto
+    fase: gestacao_5_7m
+    prioridade: util
+    quantidade: 1
+    unidade: cômoda
+    para_que_serve: Guardar as roupas e trocar a fralda na altura certa.
+    como_escolher: Trocador com bordas elevadas e cômoda fixada na parede.
+    regras:
+      - condicao: apartamento
+        efeito: dica
+        valor: Em apartamento pequeno, a cômoda com trocador economiza espaço e dispensa um trocador separado.
+    marcas: [Tcil, Reller, Matic]
+  - slug: baba-eletronica
+    nome: Babá eletrônica
+    categoria: sono-e-quarto
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: aparelho
+    para_que_serve: Ouvir ou ver o bebê de outro cômodo.
+    como_escolher: Alcance suficiente para a casa e fio sempre longe do berço.
+    marcas: [Motorola, Philips Avent, Multikids Baby]
+  - slug: mosquiteiro
+    nome: Mosquiteiro
+    categoria: sono-e-quarto
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: mosquiteiro
+    para_que_serve: Proteger o bebê de insetos.
+    como_escolher: Bem preso por fora, sem sobras de tecido dentro do berço.
+    regras:
+      - condicao: perfil_quente
+        efeito: incluir_so_se
+    marcas: [Linhas de loja]
+
+  # ---------- Higiene e banho ----------
+  - slug: fraldas-descartaveis
+    nome: Fraldas descartáveis
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 2
+    unidade: pacotes RN; depois, cerca de 1 mês de estoque de P
+    para_que_serve: Uso diário; no começo são de 8 a 12 trocas por dia.
+    como_escolher: Pouco tamanho RN, que dura pouco. Testar marcas antes de fazer estoque.
+    marcas: [Pampers, Huggies, MamyPoko, Turma da Mônica Baby, Personal Baby]
+  - slug: algodao-lenco
+    nome: Algodão e lenço umedecido
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 6
+    unidade: pacotes (4 de algodão e 2 de lenço)
+    para_que_serve: Limpeza na troca de fralda.
+    como_escolher: Nas primeiras semanas, algodão com água. Lenço sem perfume e sem álcool.
+    marcas: [Cremer, Huggies, Pampers]
+  - slug: pomada-assadura
+    nome: Pomada para assadura
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 2
+    unidade: tubos
+    para_que_serve: Prevenir e tratar assaduras.
+    como_escolher: Com óxido de zinco ou dexpantenol; confirme com o pediatra.
+    marcas: [Bepantol Baby, Hipoglós, Desitin]
+  - slug: sabonete-xampu
+    nome: Sabonete e xampu de bebê
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 2
+    unidade: frascos (1 de cada)
+    para_que_serve: Banho.
+    como_escolher: pH neutro e sem perfume forte.
+    marcas: [Johnson's Baby, Granado Bebê, Mustela, Dove Baby, Natura Mamãe e Bebê]
+  - slug: banheira
+    nome: Banheira com suporte
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 1
+    unidade: banheira
+    para_que_serve: Banho seguro na altura certa para quem dá o banho.
+    como_escolher: Estável e com apoio anatômico; o balde de banho é uma alternativa.
+    marcas: [Burigotto, Safety 1st]
+  - slug: termometro
+    nome: Termômetro corporal digital
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: essencial
+    seguranca: true
+    quantidade: 1
+    unidade: termômetro
+    para_que_serve: Medir a febre.
+    como_escolher: Digital; nunca de mercúrio.
+    marcas: [G-Tech, Omron]
+  - slug: kit-unha
+    nome: Kit unha e escova macia
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: kit
+    para_que_serve: Cortar as unhas e pentear.
+    como_escolher: Tesoura de ponta redonda ou lixa de bebê.
+    marcas: [Lillo, Kuka]
+  - slug: aspirador-nasal
+    nome: Aspirador nasal e soro fisiológico
+    categoria: higiene-e-banho
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: kit
+    para_que_serve: Desentupir o nariz.
+    como_escolher: Fácil de desmontar e lavar.
+    marcas: [NoseFrida, Lillo]
+
+  # ---------- Passeio e transporte ----------
+  - slug: bebe-conforto
+    nome: Bebê conforto
+    categoria: passeio-e-transporte
+    fase: gestacao_5_7m
+    prioridade: essencial
+    seguranca: true
+    quantidade: 1
+    unidade: bebê conforto
+    para_que_serve: Transporte no carro, obrigatório por lei desde a saída da maternidade.
+    como_escolher: Selo INMETRO, instalado voltado para trás; teste no carro antes. Evite usado sem histórico.
+    regras:
+      - condicao: sem_carro
+        efeito: mudar_prioridade
+        valor: util
+      - condicao: sem_carro
+        efeito: dica
+        valor: Mesmo sem carro, ele continua necessário para táxi, carro de aplicativo ou carona.
+    marcas: [Maxi-Cosi, Cybex, Chicco, Burigotto, Safety 1st, Infanti]
+  - slug: carrinho
+    nome: Carrinho
+    categoria: passeio-e-transporte
+    fase: gestacao_5_7m
+    prioridade: essencial
+    quantidade: 1
+    unidade: carrinho
+    para_que_serve: Passeios do dia a dia.
+    como_escolher: Encosto que deita totalmente, cinto de 5 pontos e que caiba no porta-malas.
+    regras:
+      - condicao: sem_carro
+        efeito: dica
+        valor: Sem carro, prefira um carrinho leve e fácil de fechar para ônibus e metrô.
+    marcas: [Burigotto, Galzerano, Chicco, ABC Design, Cybex]
+  - slug: sling
+    nome: Sling ou canguru
+    categoria: passeio-e-transporte
+    fase: bebe_0_3m
+    prioridade: util
+    quantidade: 1
+    unidade: sling ou canguru
+    para_que_serve: Carregar o bebê com as mãos livres.
+    como_escolher: Posição em M (joelhos acima do bumbum) e rosto sempre visível.
+    regras:
+      - condicao: sem_carro
+        efeito: mudar_prioridade
+        valor: essencial
+    marcas: [Ergobaby, Infanti, Chicco]
+  - slug: bolsa-maternidade
+    nome: Bolsa maternidade e trocador portátil
+    categoria: passeio-e-transporte
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 1
+    unidade: bolsa
+    para_que_serve: Levar o necessário nas saídas.
+    como_escolher: Bolsos separados e trocador lavável.
+    marcas: [Masterbag, Linhas de loja]
+
+  # ---------- Alimentação ----------
+  - slug: almofada-amamentacao
+    nome: Almofada de amamentação
+    categoria: alimentacao
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: almofada
+    para_que_serve: Apoiar o bebê e a coluna de quem amamenta.
+    como_escolher: Capa removível. Nunca usar para o bebê dormir.
+    marcas: [Linhas de loja]
+  - slug: bomba-tira-leite
+    nome: Bomba tira-leite
+    categoria: alimentacao
+    fase: bebe_0_3m
+    prioridade: pode_esperar
+    quantidade: 1
+    unidade: bomba
+    para_que_serve: Tirar e guardar leite.
+    como_escolher: Só se precisar; a manual basta para uso ocasional.
+    marcas: [Medela, Philips Avent]
+  - slug: mamadeira
+    nome: Mamadeira
+    categoria: alimentacao
+    fase: bebe_0_3m
+    prioridade: pode_esperar
+    quantidade: 2
+    unidade: mamadeiras
+    para_que_serve: Oferecer leite tirado ou fórmula.
+    como_escolher: Livre de BPA; só comprar se houver indicação.
+    marcas: [Philips Avent, MAM, NUK, Lillo, Kuka]
+  - slug: cadeira-alimentacao
+    nome: Cadeira de alimentação
+    categoria: alimentacao
+    fase: bebe_3_6m
+    prioridade: essencial
+    idade_inicio_meses: 6
+    quantidade: 1
+    unidade: cadeira
+    para_que_serve: Comer sentado e seguro.
+    como_escolher: Cinto de 5 pontos, base larga e bandeja lavável.
+    marcas: [Burigotto, Chicco, Safety 1st, Galzerano]
+  - slug: kit-introducao
+    nome: Pratos, colheres e babadores
+    categoria: alimentacao
+    fase: bebe_3_6m
+    prioridade: essencial
+    idade_inicio_meses: 6
+    quantidade: 9
+    unidade: peças (2 pratos, 3 colheres e 4 babadores)
+    para_que_serve: Introdução alimentar.
+    como_escolher: Silicone ou plástico livre de BPA e colher macia.
+    marcas: [MAM, NUK, Buba, Lillo]
+  - slug: copo-transicao
+    nome: Copo de transição
+    categoria: alimentacao
+    fase: bebe_6_9m
+    prioridade: essencial
+    idade_inicio_meses: 6
+    quantidade: 1
+    unidade: copo
+    para_que_serve: Oferecer água a partir dos 6 meses.
+    como_escolher: Com alça e bico macio, ou borda 360.
+    marcas: [NUK, MAM, Lillo]
+
+  # ---------- Segurança da casa ----------
+  - slug: protetor-tomada
+    nome: Protetor de tomada
+    categoria: seguranca-da-casa
+    fase: bebe_6_9m
+    prioridade: essencial
+    seguranca: true
+    idade_inicio_meses: 6
+    quantidade: 6
+    unidade: protetores (um por tomada baixa)
+    para_que_serve: Evitar choque elétrico.
+    como_escolher: Difícil de a criança remover.
+    marcas: [Safety 1st, Multikids Baby]
+  - slug: trava-gaveta
+    nome: Trava de gaveta e armário
+    categoria: seguranca-da-casa
+    fase: bebe_6_9m
+    prioridade: essencial
+    seguranca: true
+    idade_inicio_meses: 6
+    quantidade: 8
+    unidade: travas (de 6 a 10)
+    para_que_serve: Afastar produtos de limpeza e objetos cortantes.
+    como_escolher: Adesiva ou magnética.
+    marcas: [Safety 1st, Multikids Baby]
+  - slug: portao-seguranca
+    nome: Portão de segurança
+    categoria: seguranca-da-casa
+    fase: bebe_6_9m
+    prioridade: essencial
+    seguranca: true
+    idade_inicio_meses: 6
+    quantidade: 1
+    unidade: portão por acesso de escada
+    para_que_serve: Bloquear a escada e a cozinha.
+    como_escolher: No topo da escada, sempre parafusado (nunca só de pressão).
+    regras:
+      - condicao: casa_com_escada
+        efeito: incluir_so_se
+    marcas: [Safety 1st, Burigotto]
+  - slug: protetor-quina
+    nome: Protetor de quina
+    categoria: seguranca-da-casa
+    fase: bebe_9_12m
+    prioridade: util
+    seguranca: true
+    idade_inicio_meses: 9
+    quantidade: 1
+    unidade: kit
+    para_que_serve: Amortecer batidas.
+    como_escolher: Silicone bem aderido.
+    marcas: [Safety 1st, Multikids Baby]
+
+  # ---------- Para a mãe ----------
+  - slug: absorvente-pos-parto
+    nome: Absorvente pós-parto
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 3
+    unidade: pacotes (2 a 3)
+    para_que_serve: Sangramento das primeiras semanas.
+    como_escolher: Noturno, de fluxo intenso e sem perfume.
+    marcas: [Intimus, Always, Linhas de farmácia]
+  - slug: calcinha-pos-parto
+    nome: Calcinha pós-parto
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 5
+    unidade: calcinhas
+    para_que_serve: Conforto e apoio para o absorvente.
+    como_escolher: Cintura alta e algodão.
+    marcas: [Linhas de loja]
+  - slug: sutia-amamentacao
+    nome: Sutiã de amamentação
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 3
+    unidade: sutiãs
+    para_que_serve: Amamentar sem tirar a peça.
+    como_escolher: Comprar perto do parto, um número acima e sem aro.
+    marcas: [Linhas de loja]
+  - slug: protetor-seios
+    nome: Protetor de seios
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: caixa (ou 3 pares laváveis)
+    para_que_serve: Absorver o vazamento de leite.
+    como_escolher: Trocar sempre que estiver úmido.
+    marcas: [Lansinoh, Philips Avent, Lillo]
+  - slug: pomada-mamilo
+    nome: Pomada para mamilo
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: tubo
+    para_que_serve: Aliviar fissuras.
+    como_escolher: Lanolina pura; confirme com quem acompanha a amamentação.
+    marcas: [Lansinoh, Medela]
+  - slug: camisola-abertura
+    nome: Camisola ou pijama com abertura
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 3
+    unidade: peças
+    para_que_serve: Amamentar na maternidade e em casa.
+    como_escolher: Botões na frente.
+    marcas: [Linhas de loja]
+  - slug: chinelo-banho
+    nome: Chinelo e itens de banho
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: essencial
+    quantidade: 1
+    unidade: kit
+    para_que_serve: Mala da maternidade.
+    como_escolher: Chinelo antiderrapante.
+  - slug: garrafa-agua
+    nome: Garrafa de água grande
+    categoria: para-a-mae
+    fase: gestacao_7_8m
+    prioridade: util
+    quantidade: 1
+    unidade: garrafa
+    para_que_serve: Hidratação durante a amamentação.
+    como_escolher: Com canudo, para usar com uma mão só.
+  - slug: cinta-pos-parto
+    nome: Cinta pós-parto
+    categoria: para-a-mae
+    fase: bebe_0_3m
+    prioridade: pode_esperar
+    quantidade: 1
+    unidade: cinta
+    para_que_serve: Apoio abdominal depois do parto.
+    como_escolher: Só se o médico indicar.
+    marcas: [Linhas de farmácia]

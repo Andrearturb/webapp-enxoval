@@ -1,0 +1,64 @@
+# A faixa é uma primeira estimativa, a validar no admin.
+# Roupas
+- {nome: Hering Kids, faixa: intermediario}
+- {nome: Carter's, faixa: investir}
+- {nome: Tip Top, faixa: intermediario}
+- {nome: Up Baby, faixa: intermediario}
+- {nome: Brandili, faixa: economico}
+- {nome: C&A, faixa: economico}
+- {nome: Renner, faixa: economico}
+- {nome: Riachuelo, faixa: economico}
+# Móveis, sono e passeio
+- {nome: Tcil, faixa: intermediario}
+- {nome: Reller, faixa: intermediario}
+- {nome: Matic, faixa: investir}
+- {nome: Burigotto, faixa: economico}
+- {nome: Galzerano, faixa: economico}
+- {nome: Ortobom, faixa: intermediario}
+- {nome: Castor, faixa: intermediario}
+- {nome: Fom, faixa: economico}
+- {nome: Papi, faixa: intermediario}
+- {nome: Hering, faixa: intermediario}
+- {nome: Motorola, faixa: intermediario}
+- {nome: Philips Avent, faixa: investir}
+- {nome: Multikids Baby, faixa: economico}
+- {nome: Maxi-Cosi, faixa: investir}
+- {nome: Cybex, faixa: investir}
+- {nome: Chicco, faixa: intermediario}
+- {nome: Infanti, faixa: economico}
+- {nome: ABC Design, faixa: investir}
+- {nome: Ergobaby, faixa: investir}
+- {nome: Masterbag, faixa: intermediario}
+- {nome: Safety 1st, faixa: intermediario}
+# Higiene e saúde
+- {nome: Pampers, faixa: investir}
+- {nome: Huggies, faixa: intermediario}
+- {nome: MamyPoko, faixa: intermediario}
+- {nome: Turma da Mônica Baby, faixa: economico}
+- {nome: Personal Baby, faixa: economico}
+- {nome: Cremer, faixa: economico}
+- {nome: Bepantol Baby, faixa: intermediario}
+- {nome: Hipoglós, faixa: economico}
+- {nome: Desitin, faixa: investir}
+- {nome: Johnson's Baby, faixa: economico}
+- {nome: Granado Bebê, faixa: intermediario}
+- {nome: Mustela, faixa: investir}
+- {nome: Dove Baby, faixa: intermediario}
+- {nome: Natura Mamãe e Bebê, faixa: intermediario}
+- {nome: G-Tech, faixa: economico}
+- {nome: Omron, faixa: investir}
+- {nome: Lillo, faixa: economico}
+- {nome: Kuka, faixa: economico}
+- {nome: NoseFrida, faixa: investir}
+# Alimentação
+- {nome: Medela, faixa: investir}
+- {nome: MAM, faixa: intermediario}
+- {nome: NUK, faixa: intermediario}
+- {nome: Buba, faixa: economico}
+# Para a mãe
+- {nome: Intimus, faixa: economico}
+- {nome: Always, faixa: economico}
+- {nome: Lansinoh, faixa: investir}
+# Genéricos
+- {nome: Linhas de loja, faixa: economico}
+- {nome: Linhas de farmácia, faixa: economico}

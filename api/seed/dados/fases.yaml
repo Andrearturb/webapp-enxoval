@@ -1,0 +1,56 @@
+- codigo: gestacao_ate_5m
+  nome: Até o 5º mês de gestação
+  referencia: gestacao_semana
+  inicio: 0
+  fim: 17
+  ordem: 1
+  texto: Definir o orçamento, pesquisar marcas e montar a lista de presentes. Por enquanto, comprar pouco.
+- codigo: gestacao_5_7m
+  nome: Do 5º ao 7º mês de gestação
+  referencia: gestacao_semana
+  inicio: 18
+  fim: 26
+  ordem: 2
+  texto: Hora dos itens grandes — berço, colchão, cômoda com trocador, carrinho e bebê conforto.
+- codigo: gestacao_7_8m
+  nome: Do 7º ao 8º mês de gestação
+  referencia: gestacao_semana
+  inicio: 27
+  fim: 36
+  ordem: 3
+  texto: Roupas RN e P, roupa de berço, higiene e fraldas; lavar tudo antes do parto. Mala da maternidade pronta e bebê conforto instalado até a 34ª semana.
+- codigo: parto
+  nome: Reta final e parto
+  referencia: gestacao_semana
+  inicio: 37
+  fim: 42
+  ordem: 4
+  texto: Conferir a mala e descansar. O que faltar pode esperar o bebê chegar.
+- codigo: bebe_0_3m
+  nome: Do nascimento aos 3 meses
+  referencia: bebe_mes
+  inicio: 0
+  fim: 2
+  ordem: 5
+  texto: Repor fraldas e comprar só o que fez falta, como sling ou bomba de leite. Roupas M para a estação certa.
+- codigo: bebe_3_6m
+  nome: Dos 3 aos 6 meses
+  referencia: bebe_mes
+  inicio: 3
+  fim: 5
+  ordem: 6
+  texto: Roupas G, mordedores e tapete de atividades. No 5º mês, cadeira de alimentação, pratos, colheres e babadores.
+- codigo: bebe_6_9m
+  nome: Dos 6 aos 9 meses
+  referencia: bebe_mes
+  inicio: 6
+  fim: 8
+  ordem: 7
+  texto: Começa a introdução alimentar, com copo de transição; roupas GG. Antes de engatinhar, protetor de tomada, trava de gaveta e portão.
+- codigo: bebe_9_12m
+  nome: Dos 9 aos 12 meses
+  referencia: bebe_mes
+  inicio: 9
+  fim: 11
+  ordem: 8
+  texto: Primeiro sapato de sola flexível e roupas tamanho 1. Trocar a cadeirinha do carro só quando o bebê passar do limite do bebê conforto.

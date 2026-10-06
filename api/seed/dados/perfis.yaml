@@ -1,0 +1,15 @@
+- codigo: quente
+  nome: Quente o ano todo
+  descricao: Sem inverno de verdade; só noites mais frescas em junho e julho.
+  meses_frios: []
+  meses_frescos: [6, 7]
+- codigo: moderado
+  nome: Inverno moderado
+  descricao: Frio de junho a agosto, sem extremos.
+  meses_frios: [6, 7, 8]
+  meses_frescos: []
+- codigo: frio
+  nome: Inverno frio
+  descricao: Frio de maio a setembro, com noites geladas.
+  meses_frios: [5, 6, 7, 8, 9]
+  meses_frescos: []

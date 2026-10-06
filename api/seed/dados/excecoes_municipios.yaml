@@ -1,0 +1,24 @@
+# Cidades cujo clima foge do padrão do estado (primeira versão, a validar).
+# Serra fluminense
+- {nome: Petrópolis, uf: RJ, perfil: frio}
+- {nome: Teresópolis, uf: RJ, perfil: frio}
+- {nome: Nova Friburgo, uf: RJ, perfil: frio}
+# Serra da Mantiqueira e sul de Minas
+- {nome: Campos do Jordão, uf: SP, perfil: frio}
+- {nome: Camanducaia, uf: MG, perfil: frio}
+- {nome: Gonçalves, uf: MG, perfil: frio}
+- {nome: Maria da Fé, uf: MG, perfil: frio}
+- {nome: Poços de Caldas, uf: MG, perfil: frio}
+- {nome: Barbacena, uf: MG, perfil: frio}
+# Serras do Nordeste
+- {nome: Garanhuns, uf: PE, perfil: moderado}
+- {nome: Triunfo, uf: PE, perfil: moderado}
+- {nome: Vitória da Conquista, uf: BA, perfil: moderado}
+- {nome: Guaramiranga, uf: CE, perfil: moderado}
+# Região serrana do Espírito Santo
+- {nome: Domingos Martins, uf: ES, perfil: moderado}
+- {nome: Venda Nova do Imigrante, uf: ES, perfil: moderado}
+# Norte e oeste do Paraná
+- {nome: Londrina, uf: PR, perfil: moderado}
+- {nome: Maringá, uf: PR, perfil: moderado}
+- {nome: Foz do Iguaçu, uf: PR, perfil: moderado}
