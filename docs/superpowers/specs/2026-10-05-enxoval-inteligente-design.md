@@ -1,6 +1,6 @@
 # Enxoval Inteligente: desenho do MVP
 
-Data: 2026-10-05 · Status: aguardando revisão · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
+Data: 2026-10-05 · Status: aprovado · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
 
 ## 1. Objetivo e contexto
 
@@ -82,18 +82,18 @@ Regra de fronteira: `motor/` não importa banco, HTTP nem SQLAlchemy. `servicos/
 
 | Tabela | Campos principais |
 |---|---|
-| `categoria` | id, nome, ordem |
+| `categoria` | id, slug, nome, ordem |
 | `fase_roteiro` | código, nome, início e fim (referência: semana de gestação ou mês do bebê), texto, ordem |
-| `item` | id, slug, categoria, nome, para_que_serve, como_escolher, idade_inicio_meses, fase_compra (→ `fase_roteiro`), prioridade_base (`essencial`, `util`, `pode_esperar`), `e_seguranca`, uso_clima (`neutro`, `divide`, `so_frio`), variante_frio e variante_calor (rótulos, para `divide`), quantidade e unidade_texto (itens sem tamanho) |
-| `item_tamanho` | item, tamanho (`RN`, `P`, `M`, `G`, `GG`), quantidade_base (calibrada para lavar a cada 2 dias) |
+| `item` | id, slug, categoria, nome, para_que_serve, como_escolher, idade_inicio_meses, fase_compra (→ `fase_roteiro`), prioridade_base (`essencial`, `util`, `pode_esperar`), `e_seguranca`, uso_clima (`neutro`, `divide`, `so_frio`), variante_frio e variante_calor (rótulos, para `divide`), `escala_lavagem` (a quantidade segue a fórmula de lavagem), quantidade e unidade_texto (itens sem tamanho), ordem |
+| `item_tamanho` | item, tamanho (`RN`, `P`, `M`, `G`, `GG`), quantidade_base (calibrada para lavar a cada 2 dias), fase_compra opcional (ex.: roupas M compradas de 0 a 3 meses) |
 | `item_regra` | item, condição (`com_carro`, `sem_carro`, `apartamento`, `casa_sem_escada`, `casa_com_escada`, `perfil_quente`, `perfil_moderado`, `perfil_frio`), efeito (`incluir_so_se`, `mudar_prioridade`, `dica`), valor |
 | `janela_tamanho` | tamanho, idade_inicio_dias, idade_fim_dias, peso_referencia |
 | `perfil_clima` | código (`quente`, `moderado`, `frio`), nome, descrição, meses_frios, meses_frescos |
 | `estado` | uf, nome, perfil_padrao |
 | `municipio` | código IBGE, nome, nome_busca (sem acento), uf, perfil_excecao (opcional) |
-| `marca` | id, nome, `validado`, fonte, revisado_em |
+| `marca` | id, nome, faixa_padrao, `validado`, fonte, revisado_em |
 | `item_marca` | item, marca, faixa (`economico`, `intermediario`, `investir`), ordem |
-| `regra_seguranca` | id, tema (`sono`, `transporte`, `banho`, `alimentacao`, `casa`, `brinquedos`, `geral`), idade_inicio_meses, idade_fim_meses, texto, base (SBP, INMETRO, CONTRAN…), `validado`, fonte, revisado_em |
+| `regra_seguranca` | id, código, tema (`sono`, `transporte`, `banho`, `alimentacao`, `casa`, `brinquedos`, `geral`), idade_inicio_meses, idade_fim_meses, texto, base (SBP, INMETRO, CONTRAN…), `validado`, fonte, revisado_em |
 | `item_regra_seguranca` | item, regra_seguranca (N:N, para mostrar o alerta na ficha) |
 
 ### Família
