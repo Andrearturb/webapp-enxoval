@@ -13,8 +13,10 @@ cp .env.example .env        # PowerShell: Copy-Item .env.example .env
 docker compose up -d --build
 ```
 
-- API: http://localhost:8000/api/v1/saude
-- Documentação da API: http://localhost:8000/api/docs
+- API: http://localhost:8010/api/v1/saude
+- Documentação da API: http://localhost:8010/api/docs
+
+Porta diferente de 8010 em uso? Troque `API_PORT` no `.env`.
 
 ## Banco e conteúdo
 
@@ -30,16 +32,16 @@ que existe), rode `python -m seed --forcar`.
 
 ## API
 
-Documentação interativa em http://localhost:8000/api/docs (só com `DOCS_HABILITADO=true`).
+Documentação interativa em http://localhost:8010/api/docs (só com `DOCS_HABILITADO=true`).
 
 ```bash
 # busca de cidade
-curl "http://localhost:8000/api/v1/municipios?busca=curitiba"
+curl "http://localhost:8010/api/v1/municipios?busca=curitiba"
 # cria um enxoval e lê o resultado
-curl -X POST http://localhost:8000/api/v1/enxovais -H 'Content-Type: application/json' \
+curl -X POST http://localhost:8010/api/v1/enxovais -H 'Content-Type: application/json' \
   -d '{"municipio_codigo":4106902,"data_prevista":"2027-06-15","dias_entre_lavagens":2,
        "moradia":"apartamento","tem_carro":true,"orcamento":"intermediario","primeiro_filho":true}'
-curl http://localhost:8000/api/v1/enxovais/<id>
+curl http://localhost:8010/api/v1/enxovais/<id>
 ```
 
 ## Testes
