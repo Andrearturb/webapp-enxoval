@@ -21,7 +21,7 @@
 
 ## Review Focus
 
-1. **`docker compose up -d --build web` sobe sem erro e `http://localhost:5173` mostra algo no navegador** (não uma tela branca). Nenhum teste automatizado prova isso — jsdom não é um navegador real. Verificação manual na Tarefa 1.
+1. **`docker compose up -d --build web` sobe sem erro e `http://localhost:5174` mostra algo no navegador** (não uma tela branca). Nenhum teste automatizado prova isso — jsdom não é um navegador real. Verificação manual na Tarefa 1.
 2. **Uma rota totalmente desconhecida** (ex.: `/isso-nao-existe`) não pode deixar a tela branca ou travada — precisa de uma rota de fallback "página não encontrada". Teste na Tarefa 4.
 3. **`/enxoval/<qualquer-coisa>/guia/<qualquer-coisa>`** cai na página de guia do item com **qualquer** valor de `:id` e `:item` — o roteador não pode exigir um item ou enxoval conhecido ainda (isso só chega na 5d). Teste na Tarefa 4.
 4. **`npm run build` (build de produção) compila sem erro de tipos**, mesmo que não seja usado até o deploy — garante que a 5a não deixa a árvore de tipos quebrada para as sub-etapas seguintes. Verificação na Tarefa 3 e novamente na Tarefa 5.
@@ -37,7 +37,7 @@
 - Modify: `docker-compose.yml`, `docker-compose.override.yml`
 
 **Interfaces:**
-- Produces: serviço `web` acessível em `http://localhost:5173` com hot reload; `web/vite.config.ts` com `server.proxy["/api"]` apontando para `http://api:8000`.
+- Produces: serviço `web` acessível em `http://localhost:5174` com hot reload; `web/vite.config.ts` com `server.proxy["/api"]` apontando para `http://api:8000`.
 
 Esta tarefa é só scaffold/configuração — não há comportamento para testar com antecedência (a skill de TDD lista arquivos de configuração como exceção). A prova é rodar o container e ver a página no navegador.
 
@@ -101,6 +101,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    watch: {
+      // O Docker Desktop no Windows não propaga eventos de inotify para
+      // bind mounts; sem polling, o Vite nunca percebe um arquivo mudado.
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: 'http://api:8000',
@@ -158,7 +163,7 @@ No bloco `services:`, depois de `api:`:
       - ./web:/app
       - node_modules_web:/app/node_modules
     ports:
-      - "127.0.0.1:5173:5173"
+      - "127.0.0.1:5174:5173"
     command: npm run dev
 ```
 O volume `node_modules_web` impede que o bind mount de `./web:/app` esconda o `node_modules` instalado dentro da imagem — essencial no Windows, onde um `node_modules` do host (se existir) traria binários da plataforma errada. Por ser nomeado (não anônimo), `docker compose run --rm web npm install <pacote>` nas próximas tarefas grava nele, e o próximo `run` vê o pacote instalado.
@@ -171,7 +176,7 @@ docker compose up -d --build web
 ```
 Expected: os serviços `db`, `api` e `web` sobem sem erro.
 
-Abra `http://localhost:5173` no navegador.
+Abra `http://localhost:5174` no navegador.
 Expected: a página padrão do scaffold do Vite aparece (logos do Vite/React, contador).
 
 Edite `web/src/App.tsx` (qualquer mudança de texto visível) com os containers no ar.
@@ -414,7 +419,7 @@ export default function Inicio() {
   return <h1 className="text-principal">Início</h1>
 }
 ```
-Abra `http://localhost:5173` no navegador.
+Abra `http://localhost:5174` no navegador.
 Expected: o fundo da página é o bege claro (`#F7F5EE`), o título "Início" está em Lora e na cor verde principal (`#4F6B57`). Depois de confirmar visualmente, pode manter ou remover o `className` de teste — ele não faz parte do contrato desta tarefa.
 
 - [ ] **Step 8: Commit**
@@ -616,9 +621,9 @@ Expected: todos os testes passam (1 de `Inicio` + 10 de `AppRoutes` — 8 do `it
 - [ ] **Step 7: Verificar manualmente**
 
 Com `docker compose up -d web` no ar, abra no navegador:
-- `http://localhost:5173/` → "Início"
-- `http://localhost:5173/enxoval/qualquer/planilha` → "Planilha"
-- `http://localhost:5173/rota-que-nao-existe` → "Página não encontrada"
+- `http://localhost:5174/` → "Início"
+- `http://localhost:5174/enxoval/qualquer/planilha` → "Planilha"
+- `http://localhost:5174/rota-que-nao-existe` → "Página não encontrada"
 
 - [ ] **Step 8: Commit**
 
@@ -694,7 +699,7 @@ Acrescente ao `README.md`, depois da seção "## API":
 docker compose up -d --build web
 ```
 
-- http://localhost:5173
+- http://localhost:5174
 
 Gerar os tipos da API a partir do OpenAPI (a API precisa estar no ar, com `DOCS_HABILITADO=true`):
 ```bash
