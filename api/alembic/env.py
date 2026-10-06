@@ -9,7 +9,10 @@ from app.db.base import Base
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # disable_existing_loggers=False: por padrão o fileConfig desabilitaria qualquer
+    # logger já criado no processo (ex.: ao rodar as migrações dentro da suíte de testes,
+    # no mesmo processo que importou os loggers da aplicação).
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 if not config.get_main_option("sqlalchemy.url"):
     # O configparser interpreta "%"; por isso o escape.

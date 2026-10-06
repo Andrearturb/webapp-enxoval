@@ -145,7 +145,14 @@ class ItemTamanho(Base):
 
 class ItemRegra(Base):
     __tablename__ = "item_regra"
-    __table_args__ = (UniqueConstraint("item_id", "condicao", "efeito"),)
+    __table_args__ = (
+        UniqueConstraint("item_id", "condicao", "efeito"),
+        CheckConstraint(
+            "efeito <> 'mudar_prioridade' "
+            "OR (valor IS NOT NULL AND valor IN ('essencial', 'util', 'pode_esperar'))",
+            name="valor_de_prioridade_valido",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     item_id: Mapped[int] = mapped_column(ForeignKey("item.id", ondelete="CASCADE"))
@@ -162,6 +169,9 @@ class ItemRegra(Base):
 
 class JanelaTamanho(Base):
     __tablename__ = "janela_tamanho"
+    __table_args__ = (
+        CheckConstraint("idade_fim_dias > idade_inicio_dias", name="janela_com_duracao"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tamanho: Mapped[Tamanho] = mapped_column(coluna_enum(Tamanho), unique=True)

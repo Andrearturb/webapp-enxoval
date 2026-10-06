@@ -1,20 +1,14 @@
 import csv
-import unicodedata
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.catalogo import Municipio
 from app.db.enums import PerfilCodigo
+from app.texto import normalizar_busca
 from seed.util import PASTA_DADOS, enum_de, inserir_se_faltar, ler_yaml
 
 TAMANHO_LOTE = 1000
-
-
-def normalizar_busca(texto: str) -> str:
-    """Minúsculas, sem acento e com espaços simples: 'São  Paulo' -> 'sao paulo'."""
-    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
-    return " ".join(sem_acento.lower().split())
 
 
 def carregar_municipios(sessao: Session) -> int:

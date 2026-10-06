@@ -2,7 +2,7 @@
 
 Data: 2026-10-05 · Status: aprovado · Última revisão: 2026-10-06
 
-**Estado da implementação:** Etapa 1 (Docker, banco, seed, admin) e Etapa 2 (motor) prontas e na `main`. Etapas 3 (API) e 4 (telas) pendentes; deploy fora deste ciclo. As seções abaixo descrevem o que existe; onde ainda é intenção, está dito. · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
+**Estado da implementação:** Etapas 1 (Docker, banco, seed, admin), 2 (motor) e 3 (API) prontas. Etapa 4 (exportações em PDF/Excel/CSV) e Etapa 5 (telas) pendentes; deploy fora deste ciclo. As seções abaixo descrevem o que existe; onde ainda é intenção, está dito. · Conteúdo de produto: [`docs/plano-enxoval.md`](../../plano-enxoval.md)
 
 ## 1. Objetivo e contexto
 
@@ -111,7 +111,7 @@ Regra de fronteira: `motor/` não importa banco, HTTP nem SQLAlchemy. `servicos/
 - **Chave da linha** estável e legível: `<slug>:<tamanho>:<variante>`, com partes vazias quando não se aplicam (ex.: `body:P:frio`, `berco::`).
 - **Linhas órfãs:** se uma mudança de respostas tira uma linha da lista, o registro continua. Ela aparece em "fora da lista atual" enquanto tiver alguma quantidade maior que zero.
 - **Sem usuário/dono.** A coluna de dono entra numa migração futura, junto com o Keycloak.
-- **Duas travas em falta.** `janela_tamanho` aceita fim ≤ início e `item_regra.valor` aceita qualquer texto. Ambas são editáveis no `/admin`, e um erro de digitação ali chegava ao motor. O motor hoje degrada com aviso em vez de quebrar (seção 4), mas as travas ainda devem entrar numa migração.
+- **Duas travas que faltavam, resolvidas na Etapa 3.** `janela_tamanho` recusa fim ≤ início e `item_regra.valor` recusa qualquer texto fora do enum quando o efeito é `mudar_prioridade` (migração `78d8b021c91c_travas_catalogo`). O motor continua degradando com aviso em vez de quebrar (seção 4) para o conteúdo já carregado antes da trava.
 
 ### Carga inicial (seed)
 
@@ -232,9 +232,9 @@ Títulos em **Lora** (600) e texto em **DM Sans**. Cantos arredondados de 14 a 2
 - Cabeçalhos de segurança no Caddy (CSP incluída). Postgres sem porta publicada. API como usuário não-root.
 - Dados mínimos: sem nome, e-mail ou telefone. A exclusão é definitiva.
 
-**Bloqueios de deploy** (precisam estar resolvidos antes de produção): `/admin` protegido pelo papel de admin do Keycloak; conferência de marcas e regras de segurança; política de privacidade (LGPD); confirmação da arquitetura do servidor; as duas travas de banco em falta (seção 3).
+**Bloqueios de deploy** (precisam estar resolvidos antes de produção): `/admin` protegido pelo papel de admin do Keycloak; conferência de marcas e regras de segurança; política de privacidade (LGPD); confirmação da arquitetura do servidor; **o limite de criação por IP (`app/limite.py`) usa `request.client.host`, que atrás do Caddy planejado vira o IP do próprio Caddy para toda requisição — o limite de 20/hora passaria a valer para o país inteiro, não por família. Rodar o uvicorn com `--proxy-headers --forwarded-allow-ips=<rede do Caddy>` (nunca `*` enquanto a porta da API for alcançável direto) antes de ligar o proxy** (achado da revisão da Etapa 3).
 
-**Pendências de qualidade anotadas nas revisões** (não bloqueiam a Etapa 3, mas devem entrar antes do deploy): o aviso de volume alto olha um tamanho por vez e ignora que RN e P convivem na gaveta no primeiro mês; `condicao_vale` não falha alto diante de uma condição nova; falta teste para a regra "nunca chamar `date.today()`"; `Alerta.ativo_ate` e `FaseCalculada.fim` usam convenções de fim diferentes; apagar categoria, fase ou estado em uso mostra erro 500 no admin; a busca de cidade não casa apóstrofo tipográfico nem hífen (corrigir junto com a busca da Etapa 3, movendo `normalizar_busca` para `app/`).
+**Pendências de qualidade anotadas nas revisões** (não bloqueiam a Etapa 3, mas devem entrar antes do deploy): o aviso de volume alto olha um tamanho por vez e ignora que RN e P convivem na gaveta no primeiro mês; `condicao_vale` não falha alto diante de uma condição nova; falta teste para a regra "nunca chamar `date.today()`"; `Alerta.ativo_ate` e `FaseCalculada.fim` usam convenções de fim diferentes; apagar categoria, fase ou estado em uso mostra erro 500 no admin; rotas desconhecidas e método errado devolvem `{"detail": ...}` do Starlette em inglês, fora do formato único de erro; marcar uma linha com quantidade absurdamente grande (ex.: 10 dígitos) dá 500 em vez de 422; duas gravações simultâneas na mesma linha nova (`PUT`/`completar`) podem colidir na chave primária; respostas 500 em `/enxovais` não levam os cabeçalhos de privacidade; o contrato de `respostas.perfil_clima` no texto desta spec (objeto completo) ficou desatualizado — a API implementada devolve o código (ex.: `"frio"`), que é o que o front deve esperar.
 
 ## 8. Testes
 

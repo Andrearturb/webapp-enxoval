@@ -24,7 +24,7 @@ def _municipio(sessao, nome, uf) -> Municipio:
 @pytest.mark.parametrize(
     ("entrada", "esperado"),
     [
-        ("São João d'Aliança", "sao joao d'alianca"),
+        ("São João d'Aliança", "sao joao d alianca"),
         ("  Florianópolis ", "florianopolis"),
         ("SAO   PAULO", "sao paulo"),
     ],

@@ -28,6 +28,20 @@ O conteúdo inicial fica em `api/seed/dados/`. Depois da primeira carga, edite p
 renomear lá não volta. Para repor de propósito o que estiver faltando (sem sobrescrever o
 que existe), rode `python -m seed --forcar`.
 
+## API
+
+Documentação interativa em http://localhost:8000/api/docs (só com `DOCS_HABILITADO=true`).
+
+```bash
+# busca de cidade
+curl "http://localhost:8000/api/v1/municipios?busca=curitiba"
+# cria um enxoval e lê o resultado
+curl -X POST http://localhost:8000/api/v1/enxovais -H 'Content-Type: application/json' \
+  -d '{"municipio_codigo":4106902,"data_prevista":"2027-06-15","dias_entre_lavagens":2,
+       "moradia":"apartamento","tem_carro":true,"orcamento":"intermediario","primeiro_filho":true}'
+curl http://localhost:8000/api/v1/enxovais/<id>
+```
+
 ## Testes
 
 ```bash

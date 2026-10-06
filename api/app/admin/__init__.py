@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 from sqlalchemy import Engine, inspect
 
+from app.texto import normalizar_busca
 from app.db.catalogo import (
     Categoria,
     Estado,
@@ -99,6 +100,10 @@ class MunicipioAdmin(ModelView, model=Municipio):
     column_list = [Municipio.nome, Municipio.uf, Municipio.perfil_excecao]
     column_searchable_list = [Municipio.nome, Municipio.nome_busca]
     form_excluded_columns = [Municipio.nome_busca]
+
+    async def on_model_change(self, data, model, is_created, request) -> None:
+        # nome_busca não aparece no formulário: é sempre derivado do nome.
+        model.nome_busca = normalizar_busca(model.nome)
 
 
 VISOES = [
