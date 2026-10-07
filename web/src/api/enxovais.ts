@@ -9,6 +9,8 @@ export type CategoriaSaida = components['schemas']['CategoriaSaida']
 export type MarcacaoEntrada = components['schemas']['MarcacaoEntrada']
 export type Prioridade = components['schemas']['Prioridade']
 export type Tamanho = components['schemas']['Tamanho']
+export type MomentoCompra = components['schemas']['MomentoCompra']
+export type FaseSaida = components['schemas']['FaseSaida']
 
 export function criarEnxoval(dados: RespostasEntrada): Promise<EnxovalCriado> {
   return apiFetch<EnxovalCriado>('/enxovais', {

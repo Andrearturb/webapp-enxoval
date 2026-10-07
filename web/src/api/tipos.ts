@@ -272,6 +272,11 @@ export interface components {
             /** Ja Tinha */
             ja_tinha: number;
         };
+        /**
+         * MomentoCompra
+         * @enum {string}
+         */
+        MomentoCompra: "atrasado" | "agora" | "proxima_fase" | "futuro";
         /** LinhaSaida */
         LinhaSaida: {
             /** Chave */
@@ -292,6 +297,7 @@ export interface components {
             prioridade: components["schemas"]["Prioridade"];
             /** Fase Codigo */
             fase_codigo: string;
+            momento_compra: components["schemas"]["MomentoCompra"];
             /** E Seguranca */
             e_seguranca: boolean;
             /** Comprada */

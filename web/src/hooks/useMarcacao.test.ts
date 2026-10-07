@@ -37,6 +37,7 @@ const enxovalBase: EnxovalSaida = {
       unidade_texto: null,
       prioridade: 'essencial',
       fase_codigo: 'pre-natal',
+      momento_compra: 'agora',
       e_seguranca: false,
       comprada: 0,
       ganhada: 0,
