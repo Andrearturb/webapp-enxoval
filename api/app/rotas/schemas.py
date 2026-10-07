@@ -4,7 +4,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from app.db.enums import Faixa, Moradia, PerfilCodigo, Prioridade, Tamanho, TemaSeguranca
+from app.db.enums import Faixa, MomentoCompra, Moradia, PerfilCodigo, Prioridade, Tamanho, TemaSeguranca
 from app.servicos.escrita import DadosRespostas
 from app.servicos.leitura import EnxovalCompleto
 
@@ -92,6 +92,7 @@ class LinhaSaida(BaseModel):
     ganhada: int
     ja_tinha: int
     faltam: int
+    momento_compra: MomentoCompra
 
 
 class LinhaForaSaida(BaseModel):
@@ -197,6 +198,7 @@ def montar_saida(completo: EnxovalCompleto) -> EnxovalSaida:
                 ganhada=ganhada,
                 ja_tinha=ja_tinha,
                 faltam=max(0, linha.quantidade - (comprada + ganhada + ja_tinha)),
+                momento_compra=linha.momento_compra,
             )
         )
 

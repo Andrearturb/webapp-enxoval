@@ -3,7 +3,7 @@ from dataclasses import replace
 from datetime import date
 from fractions import Fraction
 
-from app.db.enums import Tamanho, UsoClima
+from app.db.enums import MomentoCompra, Tamanho, UsoClima
 from app.motor.calendario import alertas_por_idade, montar_roteiro
 from app.motor.clima import proporcao_frio
 from app.motor.quantidades import dividir_variantes, fator_lavagem, quantidade
@@ -11,6 +11,7 @@ from app.motor.regras import Avaliacao, avaliar_regras, marcas_para
 from app.motor.tipos import (
     Catalogo,
     EnxovalCalculado,
+    FaseCalculada,
     Ficha,
     ItemCatalogo,
     JanelaTamanho,
@@ -22,6 +23,29 @@ from app.motor.tipos import (
 LIMITE_VOLUME_PADRAO = 40
 DIAS_PRIMEIRO_ANO = 365
 ORDEM_TAMANHOS = {tamanho: posicao for posicao, tamanho in enumerate(Tamanho)}
+
+
+def _momento_compra(
+    fase_codigo: str,
+    roteiro: tuple[FaseCalculada, ...],
+) -> MomentoCompra:
+    """Calcula o momento de compra de um item com base na fase atual do roteiro."""
+    # O roteiro está ordenado cronologicamente; usamos o índice como proxy de ordem
+    indices = {f.codigo: i for i, f in enumerate(roteiro)}
+    idx_atual = next((i for i, f in enumerate(roteiro) if f.atual), None)
+    idx_linha = indices.get(fase_codigo)
+
+    if idx_linha is None or idx_atual is None:
+        return MomentoCompra.FUTURO
+
+    diff = idx_linha - idx_atual
+    if diff < 0:
+        return MomentoCompra.ATRASADO
+    if diff == 0:
+        return MomentoCompra.AGORA
+    if diff == 1:
+        return MomentoCompra.PROXIMA_FASE
+    return MomentoCompra.FUTURO
 
 
 def montar_enxoval(
@@ -37,6 +61,9 @@ def montar_enxoval(
     linhas: list[LinhaCalculada] = []
     fichas: list[Ficha] = []
 
+    # Roteiro calculado antes das linhas para poder classificar momento_compra
+    roteiro = montar_roteiro(catalogo.fases, respostas.data_prevista, hoje)
+
     itens = sorted(
         catalogo.itens, key=lambda i: (ordem_categoria.get(i.categoria_slug, 10**6), i.ordem)
     )
@@ -44,13 +71,11 @@ def montar_enxoval(
         avaliacao = avaliar_regras(item, respostas)
         if not avaliacao.incluir:
             continue
-        novas = _linhas_do_item(item, avaliacao, respostas, janelas, fator, avisos)
+        novas = _linhas_do_item(item, avaliacao, respostas, janelas, fator, avisos, roteiro)
         if not novas:
             continue
         linhas.extend(novas)
         avisos.extend(avaliacao.avisos)
-        # O fallback de faixa é rotineiro e já viaja em Ficha.marcas; `avisos` fica só para
-        # defeitos de catálogo, que o dono do conteúdo precisa corrigir.
         marcas = marcas_para(item.marcas, respostas.orcamento)
         fichas.append(
             Ficha(
@@ -74,7 +99,7 @@ def montar_enxoval(
     return EnxovalCalculado(
         linhas=tuple(linhas),
         fichas=tuple(fichas),
-        roteiro=montar_roteiro(catalogo.fases, respostas.data_prevista, hoje),
+        roteiro=roteiro,
         alertas=alertas,
         resumo=_resumir(linhas, respostas, limite_volume),
         avisos=tuple(avisos),
@@ -88,6 +113,7 @@ def _linhas_do_item(
     janelas: dict[Tamanho, JanelaTamanho],
     fator: Fraction,
     avisos: list[str],
+    roteiro: tuple[FaseCalculada, ...],
 ) -> list[LinhaCalculada]:
     escala = fator if item.escala_lavagem else Fraction(1)
     if item.tamanhos:
@@ -105,6 +131,7 @@ def _linhas_do_item(
                     f"(de {janela.inicio_dias} a {janela.fim_dias} dias); sem divisão de clima"
                 )
                 janela = None
+            fase_codigo = tamanho.fase_codigo or item.fase_codigo
             saida += _por_clima(
                 item,
                 avaliacao,
@@ -112,7 +139,8 @@ def _linhas_do_item(
                 quantidade(tamanho.quantidade_base, escala),
                 (janela.inicio_dias, janela.fim_dias) if janela else None,
                 tamanho.tamanho,
-                tamanho.fase_codigo or item.fase_codigo,
+                fase_codigo,
+                _momento_compra(fase_codigo, roteiro),
             )
         return saida
     if item.quantidade is None:
@@ -126,6 +154,7 @@ def _linhas_do_item(
         (0, DIAS_PRIMEIRO_ANO),
         None,
         item.fase_codigo,
+        _momento_compra(item.fase_codigo, roteiro),
     )
 
 
@@ -137,6 +166,7 @@ def _por_clima(
     intervalo: tuple[int, int] | None,
     tamanho: Tamanho | None,
     fase_codigo: str,
+    momento: MomentoCompra,
 ) -> list[LinhaCalculada]:
     if total <= 0:
         return []
@@ -156,6 +186,7 @@ def _por_clima(
             fase_codigo=fase_codigo,
             e_seguranca=item.e_seguranca,
             escala_lavagem=item.escala_lavagem,
+            momento_compra=momento,
         )
 
     if item.uso_clima == UsoClima.NEUTRO or (

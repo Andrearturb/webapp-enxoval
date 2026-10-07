@@ -9,6 +9,7 @@ from app.db.enums import (
     Condicao,
     Efeito,
     Faixa,
+    MomentoCompra,
     Moradia,
     PerfilCodigo,
     Prioridade,
@@ -153,6 +154,7 @@ class LinhaCalculada:
     fase_codigo: str
     e_seguranca: bool
     escala_lavagem: bool
+    momento_compra: MomentoCompra = MomentoCompra.FUTURO
 
 
 @dataclass(frozen=True)

@@ -69,3 +69,10 @@ class Moradia(StrEnum):
     APARTAMENTO = "apartamento"
     CASA_SEM_ESCADA = "casa_sem_escada"
     CASA_COM_ESCADA = "casa_com_escada"
+
+
+class MomentoCompra(StrEnum):
+    ATRASADO = "atrasado"
+    AGORA = "agora"
+    PROXIMA_FASE = "proxima_fase"
+    FUTURO = "futuro"
