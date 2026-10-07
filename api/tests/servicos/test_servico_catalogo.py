@@ -7,7 +7,7 @@ def test_catalogo_do_banco_tem_tudo_que_o_motor_precisa(catalogo_no_banco):
     catalogo = carregar_catalogo(catalogo_no_banco)
 
     assert isinstance(catalogo, Catalogo)
-    assert len(catalogo.itens) == 47
+    assert len(catalogo.itens) == 48
     assert len(catalogo.categorias) == 7
     assert len(catalogo.fases) == 8
     assert len(catalogo.janelas) == 5

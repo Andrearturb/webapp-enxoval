@@ -9,7 +9,7 @@ def test_carga_completa_e_idempotente(sessao):
     primeira = carregar_tudo(sessao)
     segunda = carregar_tudo(sessao)
 
-    assert primeira["item"] == 47
+    assert primeira["item"] == 48
     assert primeira["regra_seguranca"] == 8
     assert set(segunda.values()) == {0}
 

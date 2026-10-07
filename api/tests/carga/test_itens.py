@@ -24,8 +24,8 @@ def _item(sessao, slug) -> Item:
     return sessao.scalars(select(Item).where(Item.slug == slug)).one()
 
 
-def test_carrega_os_47_itens_do_plano(catalogo):
-    assert catalogo.scalar(select(func.count()).select_from(Item)) == 47
+def test_carrega_os_48_itens_do_plano(catalogo):
+    assert catalogo.scalar(select(func.count()).select_from(Item)) == 48
 
 
 def test_itens_de_seguranca_marcados(catalogo):

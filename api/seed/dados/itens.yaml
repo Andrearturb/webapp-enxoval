@@ -44,7 +44,7 @@ itens:
     uso_clima: divide
     variantes: {frio: longo com pé, calor: curto}
     escala_lavagem: true
-    tamanhos: {RN: 2, P: 4, M: 4, G: 3, GG: 3}
+    tamanhos: {RN: 4, P: 4, M: 4, G: 3, GG: 3}
     fases_tamanho: *fases_roupa
     para_que_serve: Peça única, prática para dormir e sair.
     como_escolher: *como_roupa
@@ -114,6 +114,17 @@ itens:
     para_que_serve: Limpar regurgitação, proteger o ombro e forrar o trocador.
     como_escolher: Algodão, com bainha bem costurada.
     marcas: [Linhas de loja]
+  - slug: cueiro
+    nome: Cueiro
+    categoria: roupas
+    fase: gestacao_7_8m
+    prioridade: essencial
+    escala_lavagem: true
+    quantidade: 6
+    unidade: cueiros
+    para_que_serve: Enrolar o bebê nos primeiros dias, acalmar e ajudar no sono com o método do embrulho.
+    como_escolher: Musselina ou algodão leve, pelo menos 1,2 m × 1,2 m. Quanto maior, mais fácil de usar.
+    marcas: [Aden + Anais, Buba, Papi, Linhas de loja]
   - slug: saco-dormir
     nome: Saco de dormir
     categoria: roupas
