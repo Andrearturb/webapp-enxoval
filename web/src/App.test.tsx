@@ -27,17 +27,17 @@ function renderEm(caminho: string) {
 describe('AppRoutes', () => {
   // Rotas que dependem de getEnxoval ficam no estado "Carregando..." (getEnxoval mockado com promise pendente)
   it.each([
-    ['/', 'Início'],
-    ['/questionario/1', 'Questionário'],
-    ['/enxoval/abc123/planilha', 'Carregando'],
-    ['/enxoval/abc123/roteiro', 'Carregando'],
-    ['/enxoval/abc123/guia', 'Carregando'],
-    ['/enxoval/abc123/guia/berco', 'Carregando'],
-    ['/enxoval/abc123/seguranca', 'Carregando'],
-    ['/enxoval/abc123/ajustes', 'Ajustes'],
+    ['/', /enxoval certo/i],          // hero da página inicial
+    ['/questionario/1', /questionário/i],
+    ['/enxoval/abc123/planilha', /carregando/i],
+    ['/enxoval/abc123/roteiro', /carregando/i],
+    ['/enxoval/abc123/guia', /carregando/i],
+    ['/enxoval/abc123/guia/berco', /carregando/i],
+    ['/enxoval/abc123/seguranca', /carregando/i],
+    ['/enxoval/abc123/ajustes', /carregando/i],
   ])('a rota %s mostra a página certa', (caminho, texto) => {
     renderEm(caminho)
-    expect(screen.getByText(new RegExp(texto, 'i'))).toBeInTheDocument()
+    expect(screen.getByText(texto)).toBeInTheDocument()
   })
 
   it('uma rota desconhecida mostra a página de não encontrada, não tela branca', () => {

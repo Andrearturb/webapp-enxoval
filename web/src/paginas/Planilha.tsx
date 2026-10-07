@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { usePlanilha } from '../hooks/usePlanilha'
 import { useMarcacao } from '../hooks/useMarcacao'
-import { ErroApi } from '../api/cliente'
 import type { LinhaSaida } from '../api/enxovais'
-import { CabecalhoPlanilha } from './planilha/CabecalhoPlanilha'
+import { CabecalhoEnxoval } from './planilha/CabecalhoEnxoval'
+import { EstadoPagina } from './planilha/EstadoPagina'
 import { ResumoPlanilha } from './planilha/ResumoPlanilha'
 import { FiltrosPlanilha, type Filtro } from './planilha/FiltrosPlanilha'
 import { CategoriaPlanilha } from './planilha/CategoriaPlanilha'
@@ -28,39 +28,14 @@ export default function Planilha() {
   const { marcar, completar } = useMarcacao(id)
   const [filtro, setFiltro] = useState<Filtro>('todos')
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-fundo">
-        <p className="text-texto-suave">Carregando planilha...</p>
-      </div>
-    )
+  if (isLoading || isError || !enxoval) {
+    return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
   }
-
-  if (isError) {
-    const status = error instanceof ErroApi ? error.status : 0
-    const mensagem =
-      status === 404
-        ? 'Enxoval não encontrado. Verifique o link ou crie um novo enxoval.'
-        : error instanceof Error
-          ? error.message
-          : 'Não foi possível carregar o enxoval.'
-
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-fundo p-4">
-        <div className="rounded-2xl bg-superficie p-6 shadow-sm text-center max-w-sm">
-          <p className="text-texto">{mensagem}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!enxoval) return null
 
   const linhasFiltradas = filtrarLinhas(enxoval.linhas, filtro)
   const destacarJaTinha = enxoval.resumo.destacar_ja_tinha
 
   // Agrupa linhas filtradas por categoria, mantendo a ordem do catálogo
-  const categoriasPorSlug = Object.fromEntries(enxoval.categorias.map((c) => [c.slug, c]))
   const categorias = enxoval.categorias
     .slice()
     .sort((a, b) => a.ordem - b.ordem)
@@ -70,12 +45,9 @@ export default function Planilha() {
     }))
     .filter((cat) => cat.linhas.length > 0)
 
-  // Suprime aviso de variável não usada (categoriasPorSlug é construído mas não usado aqui)
-  void categoriasPorSlug
-
   return (
     <div className="min-h-screen bg-fundo">
-      <CabecalhoPlanilha enxoval={enxoval} />
+      <CabecalhoEnxoval enxoval={enxoval} abaAtiva="planilha" />
 
       <main className="mx-auto max-w-2xl space-y-4 p-4">
         <ResumoPlanilha enxoval={enxoval} />

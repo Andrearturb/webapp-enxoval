@@ -11,6 +11,7 @@ const ABAS = [
   { rotulo: 'Roteiro', sufixo: 'roteiro' },
   { rotulo: 'Guia', sufixo: 'guia' },
   { rotulo: 'Segurança', sufixo: 'seguranca' },
+  { rotulo: 'Ajustes', sufixo: 'ajustes' },
 ] as const
 
 export function CabecalhoEnxoval({ enxoval, abaAtiva }: Props) {

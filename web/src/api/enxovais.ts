@@ -45,3 +45,14 @@ export function completarLinha(
     },
   )
 }
+
+export function editarEnxoval(id: string, dados: RespostasEntrada): Promise<EnxovalSaida> {
+  return apiFetch<EnxovalSaida>(`/enxovais/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(dados),
+  })
+}
+
+export function apagarEnxoval(id: string): Promise<void> {
+  return apiFetch<void>(`/enxovais/${id}`, { method: 'DELETE' })
+}
