@@ -1,4 +1,9 @@
-"""Contrato HTTP: o que entra e o que sai. Nomes pensados para a tela, não para o banco."""
+"""Contrato HTTP: schemas Pydantic de entrada e de saída.
+
+Nomes e estruturas pensados para a tela (cliente HTTP), não para o banco.
+A conversão de EnxovalCompleto → EnxovalSaida vive em
+``servicos/apresentacao.py``, que tem acesso ao contexto de domínio necessário.
+"""
 import uuid
 from datetime import date
 
@@ -6,51 +11,83 @@ from pydantic import BaseModel, Field
 
 from app.db.enums import Faixa, MomentoCompra, Moradia, PerfilCodigo, Prioridade, Tamanho, TemaSeguranca
 from app.servicos.escrita import DadosRespostas
-from app.servicos.leitura import EnxovalCompleto
+
+
+# ---------------------------------------------------------------------------
+# Utilitários de erro
+# ---------------------------------------------------------------------------
 
 
 class Erro(BaseModel):
+    """Resposta de erro padrão da API.
+
+    Attributes:
+        erro: Código de erro em snake_case (ex.: ``enxoval_nao_encontrado``).
+        mensagem: Mensagem legível em português para exibição na tela.
+    """
+
     erro: str
     mensagem: str
 
 
-# ---------- entrada ----------
+# ---------------------------------------------------------------------------
+# Schemas de entrada
+# ---------------------------------------------------------------------------
 
 
 class RespostasEntrada(BaseModel):
-    municipio_codigo: int = Field(gt=0)
-    data_prevista: date
-    dias_entre_lavagens: int = Field(ge=1, le=7)
-    moradia: Moradia
-    tem_carro: bool
-    orcamento: Faixa
-    primeiro_filho: bool
-    correcao_perfil: PerfilCodigo | None = None
+    """Respostas do questionário enviadas pelo cliente para criar ou editar um enxoval."""
+
+    municipio_codigo: int = Field(gt=0, description="Código IBGE do município.")
+    data_prevista: date = Field(description="Data prevista de nascimento (AAAA-MM-DD).")
+    dias_entre_lavagens: int = Field(ge=1, le=7, description="Frequência de lavagem de roupas.")
+    moradia: Moradia = Field(description="Tipo de moradia da família.")
+    tem_carro: bool = Field(description="A família tem carro próprio.")
+    orcamento: Faixa = Field(description="Faixa de orçamento para compras.")
+    primeiro_filho: bool = Field(description="É o primeiro filho da família.")
+    correcao_perfil: PerfilCodigo | None = Field(
+        default=None,
+        description="Correção manual do perfil de clima (sobrescreve o padrão da cidade).",
+    )
 
     def para_servico(self) -> DadosRespostas:
+        """Converte para o dataclass de entrada dos serviços de domínio."""
         return DadosRespostas(**self.model_dump())
 
 
 class MarcacaoEntrada(BaseModel):
-    comprada: int = Field(ge=0)
-    ganhada: int = Field(ge=0)
-    ja_tinha: int = Field(ge=0)
+    """Quantidades marcadas pela família para uma linha da planilha."""
+
+    comprada: int = Field(ge=0, description="Unidades compradas pela família.")
+    ganhada: int = Field(ge=0, description="Unidades ganhas (chá de bebê, etc.).")
+    ja_tinha: int = Field(ge=0, description="Unidades que já existiam em casa.")
 
 
 class CompletarEntrada(BaseModel):
-    origem: str = Field(pattern="^(comprada|ganhada|ja_tinha)$")
+    """Origem para completar o que falta em uma linha (marcar tudo)."""
+
+    origem: str = Field(
+        pattern="^(comprada|ganhada|ja_tinha)$",
+        description="Como contabilizar o restante: 'comprada', 'ganhada' ou 'ja_tinha'.",
+    )
 
 
-# ---------- saída ----------
+# ---------------------------------------------------------------------------
+# Schemas de saída — partes reutilizáveis
+# ---------------------------------------------------------------------------
 
 
 class MunicipioSaida(BaseModel):
+    """Dados do município do enxoval."""
+
     codigo_ibge: int
     nome: str
     uf: str
 
 
 class PerfilSaida(BaseModel):
+    """Perfil de clima com suas características sazonais."""
+
     codigo: PerfilCodigo
     nome: str
     descricao: str
@@ -59,6 +96,8 @@ class PerfilSaida(BaseModel):
 
 
 class RespostasSaida(BaseModel):
+    """Respostas do questionário persistidas, enriquecidas com dados do município."""
+
     municipio: MunicipioSaida
     perfil_clima: PerfilCodigo
     perfil_corrigido: bool
@@ -71,12 +110,16 @@ class RespostasSaida(BaseModel):
 
 
 class CategoriaSaida(BaseModel):
+    """Categoria de itens do catálogo (ex.: Roupas, Higiene)."""
+
     slug: str
     nome: str
     ordem: int
 
 
 class LinhaSaida(BaseModel):
+    """Uma linha da planilha: item calculado pelo motor mesclado com as marcações da família."""
+
     chave: str
     item_slug: str
     nome: str
@@ -96,6 +139,8 @@ class LinhaSaida(BaseModel):
 
 
 class LinhaForaSaida(BaseModel):
+    """Linha marcada pela família que não está mais na lista calculada atual."""
+
     chave: str
     comprada: int
     ganhada: int
@@ -103,12 +148,16 @@ class LinhaForaSaida(BaseModel):
 
 
 class MarcasSaida(BaseModel):
+    """Marcas sugeridas para um item, já filtradas pelo orçamento da família."""
+
     nomes: list[str]
     faixa: Faixa | None
     faixa_aproximada: bool
 
 
 class FichaSaida(BaseModel):
+    """Ficha informativa de um item: o que é, como escolher, marcas e alertas."""
+
     slug: str
     nome: str
     para_que_serve: str
@@ -120,6 +169,8 @@ class FichaSaida(BaseModel):
 
 
 class FaseSaida(BaseModel):
+    """Uma fase do roteiro de compras com datas calculadas a partir da data prevista."""
+
     codigo: str
     nome: str
     texto: str
@@ -129,6 +180,8 @@ class FaseSaida(BaseModel):
 
 
 class AlertaSaida(BaseModel):
+    """Alerta de segurança com a data a partir da qual passa a ser relevante."""
+
     codigo: str
     tema: TemaSeguranca
     texto: str
@@ -139,6 +192,8 @@ class AlertaSaida(BaseModel):
 
 
 class ResumoSaida(BaseModel):
+    """Resumo quantitativo da planilha."""
+
     dias_sem_lavar: int
     total_unidades: int
     aviso_volume_alto: bool
@@ -146,13 +201,22 @@ class ResumoSaida(BaseModel):
 
 
 class ProgressoSaida(BaseModel):
+    """Progresso de compras da família em relação ao total calculado."""
+
     total_unidades: int
     atendidas: int
     faltam: int
     percentual: int
 
 
+# ---------------------------------------------------------------------------
+# Schema raiz de saída
+# ---------------------------------------------------------------------------
+
+
 class EnxovalSaida(BaseModel):
+    """Enxoval completo: respostas, lista calculada, roteiro, fichas e progresso."""
+
     id: uuid.UUID
     respostas: RespostasSaida
     categorias: list[CategoriaSaida]
@@ -166,115 +230,6 @@ class EnxovalSaida(BaseModel):
 
 
 class EnxovalCriado(BaseModel):
+    """Resposta de criação de enxoval: apenas o UUID gerado."""
+
     id: uuid.UUID
-
-
-def montar_saida(completo: EnxovalCompleto) -> EnxovalSaida:
-    enxoval, calculado = completo.enxoval, completo.calculado
-    marcadas = completo.marcadas
-    vazia = (0, 0, 0)
-
-    def quantidades(chave: str) -> tuple[int, int, int]:
-        marca = marcadas.get(chave)
-        return (marca.comprada, marca.ganhada, marca.ja_tinha) if marca else vazia
-
-    linhas = []
-    for linha in calculado.linhas:
-        comprada, ganhada, ja_tinha = quantidades(linha.chave)
-        linhas.append(
-            LinhaSaida(
-                chave=linha.chave,
-                item_slug=linha.item_slug,
-                nome=linha.nome,
-                rotulo_variante=linha.rotulo_variante,
-                categoria_slug=linha.categoria_slug,
-                tamanho=linha.tamanho,
-                quantidade=linha.quantidade,
-                unidade_texto=linha.unidade_texto,
-                prioridade=linha.prioridade,
-                fase_codigo=linha.fase_codigo,
-                e_seguranca=linha.e_seguranca,
-                comprada=comprada,
-                ganhada=ganhada,
-                ja_tinha=ja_tinha,
-                faltam=max(0, linha.quantidade - (comprada + ganhada + ja_tinha)),
-                momento_compra=linha.momento_compra,
-            )
-        )
-
-    return EnxovalSaida(
-        id=enxoval.id,
-        respostas=RespostasSaida(
-            municipio=MunicipioSaida(
-                codigo_ibge=completo.municipio.codigo_ibge,
-                nome=completo.municipio.nome,
-                uf=completo.municipio.uf,
-            ),
-            perfil_clima=enxoval.perfil_clima,
-            perfil_corrigido=enxoval.perfil_corrigido,
-            data_prevista=enxoval.data_prevista,
-            dias_entre_lavagens=enxoval.dias_entre_lavagens,
-            moradia=enxoval.moradia,
-            tem_carro=enxoval.tem_carro,
-            orcamento=enxoval.orcamento,
-            primeiro_filho=enxoval.primeiro_filho,
-        ),
-        categorias=[
-            CategoriaSaida(slug=c.slug, nome=c.nome, ordem=c.ordem)
-            for c in completo.catalogo.categorias
-        ],
-        linhas=linhas,
-        linhas_fora_da_lista=[
-            LinhaForaSaida(
-                chave=l.chave,
-                comprada=l.qtd_comprada,
-                ganhada=l.qtd_ganhada,
-                ja_tinha=l.qtd_ja_tinha,
-            )
-            for l in completo.fora_da_lista
-        ],
-        fichas=[
-            FichaSaida(
-                slug=f.slug,
-                nome=f.nome,
-                para_que_serve=f.para_que_serve,
-                como_escolher=f.como_escolher,
-                idade_inicio_meses=f.idade_inicio_meses,
-                marcas=MarcasSaida(
-                    nomes=list(f.marcas.nomes),
-                    faixa=f.marcas.faixa,
-                    faixa_aproximada=f.marcas.fallback,
-                ),
-                dicas=list(f.dicas),
-                regras_seguranca=list(f.regras_seguranca),
-            )
-            for f in calculado.fichas
-        ],
-        roteiro=[
-            FaseSaida(
-                codigo=f.codigo, nome=f.nome, texto=f.texto,
-                inicio=f.inicio, fim=f.fim, atual=f.atual,
-            )
-            for f in calculado.roteiro
-        ],
-        alertas=[
-            AlertaSaida(
-                codigo=a.codigo, tema=a.tema, texto=a.texto, base=a.base,
-                ativo_a_partir=a.ativo_a_partir, ativo_ate=a.ativo_ate,
-                itens=list(a.itens),
-            )
-            for a in calculado.alertas
-        ],
-        resumo=ResumoSaida(
-            dias_sem_lavar=calculado.resumo.dias_sem_lavar,
-            total_unidades=calculado.resumo.total_unidades,
-            aviso_volume_alto=calculado.resumo.aviso_volume_alto,
-            destacar_ja_tinha=calculado.resumo.destacar_ja_tinha,
-        ),
-        progresso=ProgressoSaida(
-            total_unidades=completo.progresso.total_unidades,
-            atendidas=completo.progresso.atendidas,
-            faltam=completo.progresso.faltam,
-            percentual=completo.progresso.percentual,
-        ),
-    )

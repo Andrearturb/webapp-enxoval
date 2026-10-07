@@ -24,6 +24,19 @@ def engine_teste():
     engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def _limpar_cache_catalogo():
+    """Invalida o cache do catálogo antes de cada teste.
+
+    Garante que testes que dependem de banco vazio ou de conteúdo específico
+    não recebam dados de um catálogo carregado por um teste anterior.
+    """
+    from app.servicos.catalogo import invalidar_cache_catalogo
+    invalidar_cache_catalogo()
+    yield
+    invalidar_cache_catalogo()
+
+
 @pytest.fixture
 def sessao(engine_teste):
     """Sessão cujo trabalho é desfeito no fim de cada teste."""

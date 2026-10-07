@@ -1,6 +1,15 @@
 """Tipos do motor: dados simples de entrada e de saída, sem banco nem HTTP.
 
-Os enums vêm de app.db.enums, que é um módulo de enums puros (sem SQLAlchemy).
+Os enums vêm de ``app.db.enums``, que é um módulo de enums puros (sem SQLAlchemy).
+Todos os tipos são ``@dataclass(frozen=True)`` — imutáveis por design, facilitando
+testes e raciocínio sobre o estado do sistema.
+
+Estrutura:
+- ``PerfilClima``, ``JanelaTamanho``, ``Fase``, ``ItemCatalogo``, ``Catalogo``:
+  dados de entrada do catálogo (lidos do banco via ``servicos/catalogo.py``).
+- ``Respostas``: respostas da família ao questionário.
+- ``LinhaCalculada``, ``Ficha``, ``FaseCalculada``, ``Alerta``, ``Resumo``,
+  ``EnxovalCalculado``: saída do motor após o cálculo.
 """
 from dataclasses import dataclass
 from datetime import date

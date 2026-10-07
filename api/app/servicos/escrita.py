@@ -1,3 +1,11 @@
+"""Serviço de escrita: operações que modificam o estado do enxoval no banco.
+
+Responsabilidades:
+- Criar e editar enxovais (``criar_enxoval``, ``editar_respostas``).
+- Gravar marcações de linhas (``marcar_linha``, ``completar_linha``).
+- Apagar enxovais (``apagar_enxoval``).
+- Validar dados de domínio: janela de data prevista, município válido, quantidades.
+"""
 import uuid
 from dataclasses import dataclass
 from datetime import date

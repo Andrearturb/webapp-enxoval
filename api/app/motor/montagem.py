@@ -1,3 +1,14 @@
+"""Motor de montagem do enxoval: orquestra o cálculo da lista personalizada.
+
+Este módulo é o ponto de entrada principal do motor de cálculo. Recebe as
+respostas da família e o catálogo de itens (ambos como dataclasses imutáveis),
+e produz um ``EnxovalCalculado`` com todas as linhas, fichas, roteiro e alertas.
+
+**Regras de isolamento:**
+- Não importa SQLAlchemy, FastAPI nem Pydantic.
+- Não chama ``date.today()`` — recebe ``hoje`` como parâmetro.
+- Funções com prefixo ``_`` são privadas ao módulo.
+"""
 from collections import defaultdict
 from dataclasses import replace
 from datetime import date

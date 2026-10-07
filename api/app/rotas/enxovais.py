@@ -1,22 +1,25 @@
+"""Rotas do ciclo de vida do enxoval: criar, ler, editar e apagar.
+
+Todas as operações delegam para ``EnxovalService``, que encapsula
+a lógica de negócio e o acesso ao banco.
+"""
 import uuid
-from datetime import date
 
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.acesso import verificar_acesso
 from app.db.sessao import obter_sessao
-from app.dependencias import obter_hoje
+from app.dependencias import obter_servico
 from app.limite import LimitePorIp
 from app.rotas.schemas import (
     EnxovalCriado,
     EnxovalSaida,
     Erro,
     RespostasEntrada,
-    montar_saida,
 )
-from app.servicos.escrita import apagar_enxoval, criar_enxoval, editar_respostas
-from app.servicos.leitura import ler_enxoval
+from app.servicos.apresentacao import montar_saida
+from app.servicos.enxoval_service import EnxovalService
 
 MAXIMO_CRIACOES = 20
 JANELA_SEGUNDOS = 3600
@@ -36,10 +39,25 @@ def criar(
     resposta: Response,
     pedido: Request,
     sessao: Session = Depends(obter_sessao),
-    hoje: date = Depends(obter_hoje),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> EnxovalCriado:
+    """Cria um enxoval a partir das respostas do questionário.
+
+    Aplica rate limiting por IP (20 criações/hora) para evitar abuso.
+    Retorna o UUID gerado no cabeçalho ``Location`` além do corpo.
+    """
     limite_de_criacao.verificar(pedido.client.host if pedido.client else "desconhecido")
-    enxoval = criar_enxoval(sessao, entrada.para_servico(), hoje)
+    dados = entrada.para_servico()
+    enxoval = servico.criar(
+        municipio_codigo=dados.municipio_codigo,
+        data_prevista=dados.data_prevista,
+        dias_entre_lavagens=dados.dias_entre_lavagens,
+        moradia=dados.moradia,
+        tem_carro=dados.tem_carro,
+        orcamento=dados.orcamento,
+        primeiro_filho=dados.primeiro_filho,
+        correcao_perfil=dados.correcao_perfil,
+    )
     sessao.commit()
     resposta.headers["Location"] = f"/api/v1/enxovais/{enxoval.id}"
     return EnxovalCriado(id=enxoval.id)
@@ -48,10 +66,10 @@ def criar(
 @router.get("/{enxoval_id}", response_model=EnxovalSaida)
 def ler(
     enxoval_id: uuid.UUID,
-    sessao: Session = Depends(obter_sessao),
-    hoje: date = Depends(obter_hoje),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> EnxovalSaida:
-    return montar_saida(ler_enxoval(sessao, enxoval_id, hoje))
+    """Retorna o enxoval completo: linhas calculadas, roteiro, fichas e progresso."""
+    return montar_saida(servico.ler(enxoval_id))
 
 
 @router.patch("/{enxoval_id}", response_model=EnxovalSaida)
@@ -59,18 +77,32 @@ def editar(
     enxoval_id: uuid.UUID,
     entrada: RespostasEntrada,
     sessao: Session = Depends(obter_sessao),
-    hoje: date = Depends(obter_hoje),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> EnxovalSaida:
-    """Recebe as 6 respostas inteiras; não há edição parcial no MVP."""
-    editar_respostas(sessao, enxoval_id, entrada.para_servico(), hoje)
+    """Substitui todas as respostas do questionário. Marcações são preservadas."""
+    dados = entrada.para_servico()
+    servico.editar(
+        enxoval_id=enxoval_id,
+        municipio_codigo=dados.municipio_codigo,
+        data_prevista=dados.data_prevista,
+        dias_entre_lavagens=dados.dias_entre_lavagens,
+        moradia=dados.moradia,
+        tem_carro=dados.tem_carro,
+        orcamento=dados.orcamento,
+        primeiro_filho=dados.primeiro_filho,
+        correcao_perfil=dados.correcao_perfil,
+    )
     sessao.commit()
-    return montar_saida(ler_enxoval(sessao, enxoval_id, hoje))
+    return montar_saida(servico.ler(enxoval_id))
 
 
 @router.delete("/{enxoval_id}", status_code=status.HTTP_204_NO_CONTENT)
 def apagar(
-    enxoval_id: uuid.UUID, sessao: Session = Depends(obter_sessao)
+    enxoval_id: uuid.UUID,
+    sessao: Session = Depends(obter_sessao),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> Response:
-    apagar_enxoval(sessao, enxoval_id)
+    """Remove permanentemente o enxoval e todas as suas linhas."""
+    servico.apagar(enxoval_id)
     sessao.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

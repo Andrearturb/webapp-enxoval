@@ -1,7 +1,25 @@
 """Converte as tabelas do catálogo nas dataclasses do motor.
 
-Esta é a única direção: o motor nunca vê SQLAlchemy.
+Esta é a única direção permitida: o motor nunca vê SQLAlchemy diretamente.
+Este módulo funciona como **Anti-Corruption Layer** (ACL) do catálogo —
+depois que os dados passam por aqui, o motor recebe apenas dataclasses
+imutáveis (``@dataclass(frozen=True)``), sem referências ao ORM.
+
+**Cache de catálogo:**
+O catálogo (itens, fases, janelas, regras) raramente muda em produção — só
+quando um administrador edita o conteúdo via ``/admin``. Para evitar 5 queries
+a cada requisição, mantemos um cache em memória por processo invalidável via
+``invalidar_cache_catalogo()``. A invalidação deve ser chamada por qualquer
+operação que modifique o catálogo no banco (ex.: webhook, endpoint admin).
+
+Funções públicas:
+- ``carregar_catalogo``: carrega do banco ou retorna do cache.
+- ``perfis_por_codigo``: retorna dicionário de perfis de clima (sem cache —
+  raramente acessado e pequeno).
+- ``invalidar_cache_catalogo``: limpa o cache forçando recarga na próxima leitura.
 """
+import threading
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -20,8 +38,48 @@ from app.motor.tipos import (
     TamanhoDoItem,
 )
 
+# ---------------------------------------------------------------------------
+# Cache de processo
+# ---------------------------------------------------------------------------
+# O catálogo é imutável em runtime normal. Guardamos uma única cópia por
+# processo (thread-safe via Lock). Em testes, cada teste usa rollback de
+# transação, então o cache entre testes pode vazar — ver nota abaixo.
+# Nota: os testes que alteram o catálogo devem chamar invalidar_cache_catalogo()
+# ou usar sessões diferentes para não ver dados obsoletos.
+
+_cache_lock = threading.Lock()
+_catalogo_cache: Catalogo | None = None
+
+
+def invalidar_cache_catalogo() -> None:
+    """Invalida o cache em memória do catálogo.
+
+    Deve ser chamada após qualquer operação que modifique itens, fases,
+    janelas ou regras de segurança no banco (ex.: endpoint de admin,
+    hooks de CI/CD, testes que modificam o catálogo).
+    """
+    global _catalogo_cache
+    with _cache_lock:
+        _catalogo_cache = None
+
+
+# ---------------------------------------------------------------------------
+# Funções públicas
+# ---------------------------------------------------------------------------
+
 
 def perfis_por_codigo(sessao: Session) -> dict[PerfilCodigo, PerfilClima]:
+    """Retorna todos os perfis de clima indexados pelo código.
+
+    Não usa cache — perfis são poucos e raramente consultados fora do
+    ciclo de leitura completa do enxoval.
+
+    Args:
+        sessao: Sessão SQLAlchemy ativa.
+
+    Returns:
+        Dicionário ``{PerfilCodigo: PerfilClima}``.
+    """
     return {
         p.codigo: PerfilClima(
             codigo=p.codigo,
@@ -33,6 +91,33 @@ def perfis_por_codigo(sessao: Session) -> dict[PerfilCodigo, PerfilClima]:
 
 
 def carregar_catalogo(sessao: Session) -> Catalogo:
+    """Carrega o catálogo completo do banco ou retorna a versão em cache.
+
+    Na primeira chamada (ou após ``invalidar_cache_catalogo()``), executa
+    as queries necessárias com eager loading para evitar N+1 e armazena
+    o resultado em cache de processo.
+
+    Args:
+        sessao: Sessão SQLAlchemy ativa (usada apenas se o cache estiver vazio).
+
+    Returns:
+        ``Catalogo`` imutável com itens, fases, janelas e regras de segurança.
+    """
+    global _catalogo_cache
+    with _cache_lock:
+        if _catalogo_cache is not None:
+            return _catalogo_cache
+        _catalogo_cache = _carregar_do_banco(sessao)
+        return _catalogo_cache
+
+
+# ---------------------------------------------------------------------------
+# Funções internas
+# ---------------------------------------------------------------------------
+
+
+def _carregar_do_banco(sessao: Session) -> Catalogo:
+    """Executa as queries e monta o Catalogo a partir dos dados do banco."""
     categorias = sessao.scalars(
         select(tabelas.Categoria).order_by(tabelas.Categoria.ordem)
     ).all()
@@ -62,12 +147,15 @@ def carregar_catalogo(sessao: Session) -> Catalogo:
             JanelaTamanho(j.tamanho, j.idade_inicio_dias, j.idade_fim_dias, j.peso_referencia)
             for j in sessao.scalars(select(tabelas.JanelaTamanho))
         ),
-        itens=tuple(_item(i) for i in itens),
+        itens=tuple(_converter_item(i) for i in itens),
         regras_seguranca=tuple(
             RegraSegurancaCatalogo(
-                codigo=r.codigo, tema=r.tema,
-                idade_inicio_meses=r.idade_inicio_meses, idade_fim_meses=r.idade_fim_meses,
-                texto=r.texto, base=r.base,
+                codigo=r.codigo,
+                tema=r.tema,
+                idade_inicio_meses=r.idade_inicio_meses,
+                idade_fim_meses=r.idade_fim_meses,
+                texto=r.texto,
+                base=r.base,
                 itens=tuple(i.slug for i in r.itens),
             )
             for r in sessao.scalars(
@@ -79,7 +167,16 @@ def carregar_catalogo(sessao: Session) -> Catalogo:
     )
 
 
-def _item(item: tabelas.Item) -> ItemCatalogo:
+def _converter_item(item: tabelas.Item) -> ItemCatalogo:
+    """Converte um modelo ORM ``Item`` na dataclass ``ItemCatalogo`` do motor.
+
+    Args:
+        item: Instância ORM com todos os relacionamentos já carregados
+            (eager loading feito em ``_carregar_do_banco``).
+
+    Returns:
+        ``ItemCatalogo`` imutável.
+    """
     return ItemCatalogo(
         slug=item.slug,
         nome=item.nome,
@@ -106,8 +203,6 @@ def _item(item: tabelas.Item) -> ItemCatalogo:
             for t in item.tamanhos
         ),
         regras=tuple(RegraItem(r.condicao, r.efeito, r.valor) for r in item.regras),
-        marcas=tuple(
-            MarcaDoItem(v.marca.nome, v.faixa, v.ordem) for v in item.marcas
-        ),
+        marcas=tuple(MarcaDoItem(v.marca.nome, v.faixa, v.ordem) for v in item.marcas),
         regras_seguranca=tuple(r.codigo for r in item.regras_seguranca),
     )

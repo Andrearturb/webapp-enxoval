@@ -9,3 +9,4 @@ sqladmin>=0.20,<1
 openpyxl>=3.1,<4
 weasyprint>=62,<63
 pydyf>=0.11,<0.12
+jinja2>=3.1,<4

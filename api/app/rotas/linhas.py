@@ -1,21 +1,24 @@
+"""Rotas de marcação de linhas da planilha.
+
+Delega para ``EnxovalService`` e devolve o enxoval completo recalculado
+após cada operação — o cliente sempre recebe o estado mais recente.
+"""
 import uuid
-from datetime import date
 
 from fastapi import APIRouter, Depends, Path
 from sqlalchemy.orm import Session
 
 from app.acesso import verificar_acesso
 from app.db.sessao import obter_sessao
-from app.dependencias import obter_hoje
+from app.dependencias import obter_servico
 from app.rotas.schemas import (
     CompletarEntrada,
     EnxovalSaida,
     Erro,
     MarcacaoEntrada,
-    montar_saida,
 )
-from app.servicos.escrita import completar_linha, marcar_linha
-from app.servicos.leitura import ler_enxoval
+from app.servicos.apresentacao import montar_saida
+from app.servicos.enxoval_service import EnxovalService
 
 router = APIRouter(
     prefix="/enxovais/{enxoval_id}/linhas",
@@ -33,14 +36,12 @@ def marcar(
     entrada: MarcacaoEntrada,
     chave: str = CHAVE,
     sessao: Session = Depends(obter_sessao),
-    hoje: date = Depends(obter_hoje),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> EnxovalSaida:
-    """Grava as quantidades da linha e devolve a lista e o progresso já atualizados."""
-    marcar_linha(
-        sessao, enxoval_id, chave, entrada.comprada, entrada.ganhada, entrada.ja_tinha
-    )
+    """Grava as quantidades da linha e devolve a lista e o progresso atualizados."""
+    servico.marcar_linha(enxoval_id, chave, entrada.comprada, entrada.ganhada, entrada.ja_tinha)
     sessao.commit()
-    return montar_saida(ler_enxoval(sessao, enxoval_id, hoje))
+    return montar_saida(servico.ler(enxoval_id))
 
 
 @router.post("/{chave}/completar", response_model=EnxovalSaida)
@@ -49,8 +50,9 @@ def completar(
     entrada: CompletarEntrada,
     chave: str = CHAVE,
     sessao: Session = Depends(obter_sessao),
-    hoje: date = Depends(obter_hoje),
+    servico: EnxovalService = Depends(obter_servico),
 ) -> EnxovalSaida:
-    completar_linha(sessao, enxoval_id, chave, entrada.origem, hoje)
+    """Completa o que falta na linha com a origem informada e devolve o estado atualizado."""
+    servico.completar_linha(enxoval_id, chave, entrada.origem)
     sessao.commit()
-    return montar_saida(ler_enxoval(sessao, enxoval_id, hoje))
+    return montar_saida(servico.ler(enxoval_id))

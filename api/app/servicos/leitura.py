@@ -1,3 +1,9 @@
+"""Serviço de leitura: monta o enxoval completo a partir do banco e do motor.
+
+Responsabilidade: orquestrar a leitura de um enxoval — busca os dados no banco,
+carrega o catálogo, executa o motor de cálculo, calcula o progresso e retorna
+um ``EnxovalCompleto`` imutável pronto para ser convertido em resposta HTTP.
+"""
 import logging
 import uuid
 from dataclasses import dataclass

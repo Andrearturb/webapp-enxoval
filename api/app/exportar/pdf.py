@@ -1,99 +1,149 @@
-"""Gerador de PDF da planilha do enxoval via WeasyPrint."""
+"""Gerador de PDF da planilha do enxoval via WeasyPrint + Jinja2.
+
+Utiliza um template HTML em ``template.html`` renderizado pelo Jinja2
+antes de ser convertido para PDF pelo WeasyPrint. Essa abordagem é mais
+robusta do que substituições manuais de string e permite lógica condicional
+real no template (``{% if %}``, ``{% for %}``, filtros, etc.).
+"""
 from __future__ import annotations
 
 import pathlib
-from datetime import date, datetime
+from dataclasses import dataclass
+from datetime import date
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
+from app.exportar.rotulos import PRIORIDADE
 from app.rotas.schemas import EnxovalSaida
 
-_TEMPLATE = (pathlib.Path(__file__).parent / "template.html").read_text(encoding="utf-8")
+# Diretório deste módulo — onde template.html reside
+_TEMPLATE_DIR = pathlib.Path(__file__).parent
 
-_ROTULO_PRIORIDADE = {
-    "essencial": "Essencial",
-    "util": "Útil",
-    "pode_esperar": "Pode esperar",
-}
+# Ambiente Jinja2 com auto-escape desativado (HTML confiável gerado internamente)
+_jinja_env = Environment(
+    loader=FileSystemLoader(str(_TEMPLATE_DIR)),
+    autoescape=select_autoescape(enabled_extensions=()),
+)
 
 
-def _renderizar(saida: EnxovalSaida, hoje: date | None = None) -> str:
-    """Substitui as variáveis do template HTML manualmente (sem Jinja2)."""
-    hoje = hoje or date.today()
+# ---------------------------------------------------------------------------
+# Dataclasses de contexto do template
+# ---------------------------------------------------------------------------
 
+
+@dataclass
+class _LinhaContexto:
+    """Dados de uma linha prontos para o template Jinja2."""
+
+    nome: str
+    rotulo_variante: str | None
+    tamanho: str | None
+    quantidade: int
+    prioridade: str           # valor do enum, ex.: "essencial"
+    rotulo_prioridade: str    # rótulo legível, ex.: "Essencial"
+    comprada: int
+    ganhada: int
+    ja_tinha: int
+    faltam: int
+
+
+@dataclass
+class _CategoriaContexto:
+    """Dados de uma categoria com suas linhas prontos para o template Jinja2."""
+
+    nome: str
+    linhas: list[_LinhaContexto]
+
+
+# ---------------------------------------------------------------------------
+# Funções internas
+# ---------------------------------------------------------------------------
+
+
+def _construir_contexto(saida: EnxovalSaida, hoje: date) -> dict:
+    """Constrói o dicionário de contexto para o template Jinja2.
+
+    Args:
+        saida: Enxoval completo com linhas, categorias e progresso.
+        hoje: Data de geração do documento.
+
+    Returns:
+        Dicionário com todas as variáveis usadas pelo template.
+    """
     cidade = f"{saida.respostas.municipio.nome} – {saida.respostas.municipio.uf}"
     data_prevista = saida.respostas.data_prevista.strftime("%d/%m/%Y")
     gerado_em = hoje.strftime("%d/%m/%Y")
 
-    # Progresso
-    html = _TEMPLATE.replace("{{ cidade }}", cidade)
-    html = html.replace("{{ data_prevista }}", data_prevista)
-    html = html.replace("{{ gerado_em }}", gerado_em)
-    html = html.replace("{{ percentual }}", str(saida.progresso.percentual))
-    html = html.replace("{{ atendidas }}", str(saida.progresso.atendidas))
-    html = html.replace("{{ total }}", str(saida.progresso.total_unidades))
-    html = html.replace("{{ faltam }}", str(saida.progresso.faltam))
-
-    # Categorias e linhas
-    cats_ordenadas = sorted(saida.categorias, key=lambda c: c.ordem)
-    blocos_categorias = []
-    for cat in cats_ordenadas:
-        linhas_da_cat = [l for l in saida.linhas if l.categoria_slug == cat.slug]
+    categorias: list[_CategoriaContexto] = []
+    for cat in sorted(saida.categorias, key=lambda c: c.ordem):
+        linhas_da_cat = sorted(
+            (l for l in saida.linhas if l.categoria_slug == cat.slug),
+            key=lambda l: (l.nome, l.tamanho or ""),
+        )
         if not linhas_da_cat:
             continue
-        linhas_da_cat.sort(key=lambda l: (l.nome, l.tamanho or ""))
+        categorias.append(
+            _CategoriaContexto(
+                nome=cat.nome,
+                linhas=[
+                    _LinhaContexto(
+                        nome=l.nome,
+                        rotulo_variante=l.rotulo_variante,
+                        tamanho=l.tamanho,
+                        quantidade=l.quantidade,
+                        prioridade=l.prioridade,
+                        rotulo_prioridade=PRIORIDADE.get(l.prioridade, l.prioridade),
+                        comprada=l.comprada,
+                        ganhada=l.ganhada,
+                        ja_tinha=l.ja_tinha,
+                        faltam=l.faltam,
+                    )
+                    for l in linhas_da_cat
+                ],
+            )
+        )
 
-        linhas_html = []
-        for linha in linhas_da_cat:
-            nome = linha.nome
-            rotulo_variante = f" ({linha.rotulo_variante})" if linha.rotulo_variante else ""
-            tamanho = linha.tamanho or ""
-            prioridade_classe = linha.prioridade
-            prioridade_rotulo = _ROTULO_PRIORIDADE.get(linha.prioridade, linha.prioridade)
-            classe_tr = "faltando" if linha.faltam > 0 else ""
-            classe_faltam = "faltam-positivo" if linha.faltam > 0 else "faltam-zero"
+    return {
+        "cidade": cidade,
+        "data_prevista": data_prevista,
+        "gerado_em": gerado_em,
+        "percentual": saida.progresso.percentual,
+        "atendidas": saida.progresso.atendidas,
+        "total": saida.progresso.total_unidades,
+        "faltam": saida.progresso.faltam,
+        "categorias": categorias,
+    }
 
-            linhas_html.append(f"""
-      <tr class="{classe_tr}">
-        <td>{nome}{rotulo_variante}</td>
-        <td>{tamanho}</td>
-        <td class="num-col">{linha.quantidade}</td>
-        <td class="prioridade-{prioridade_classe}">{prioridade_rotulo}</td>
-        <td class="num-col">{linha.comprada}</td>
-        <td class="num-col">{linha.ganhada}</td>
-        <td class="num-col">{linha.ja_tinha}</td>
-        <td class="num-col {classe_faltam}">{linha.faltam}</td>
-      </tr>""")
 
-        blocos_categorias.append(f"""<div class="categoria">
-  <h2>{cat.nome}</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Item</th>
-        <th>Tam.</th>
-        <th class="num-col">Qtd.</th>
-        <th>Prioridade</th>
-        <th class="num-col">Comprada</th>
-        <th class="num-col">Ganhada</th>
-        <th class="num-col">Já tinha</th>
-        <th class="num-col">Faltam</th>
-      </tr>
-    </thead>
-    <tbody>{"".join(linhas_html)}
-    </tbody>
-  </table>
-</div>""")
+def _renderizar(saida: EnxovalSaida, hoje: date | None = None) -> str:
+    """Renderiza o template HTML com Jinja2 e retorna a string HTML.
 
-    # Substituir o bloco {% for categoria in categorias %}...{% endfor %}
-    inicio = html.find("{% for categoria in categorias %}")
-    fim = html.find("{% endfor %}") + len("{% endfor %}")
-    html = html[:inicio] + "\n".join(blocos_categorias) + html[fim:]
+    Exposto para testes — permite verificar o conteúdo sem gerar o PDF.
 
-    return html
+    Args:
+        saida: Enxoval completo.
+        hoje: Data de geração; usa ``date.today()`` se omitida.
+
+    Returns:
+        String HTML pronta para ser convertida em PDF.
+    """
+    hoje = hoje or date.today()
+    template = _jinja_env.get_template("template.html")
+    return template.render(**_construir_contexto(saida, hoje))
 
 
 def gerar_pdf(saida: EnxovalSaida, hoje: date | None = None) -> bytes:
-    """Devolve o PDF completo como bytes."""
+    """Gera o PDF completo e retorna os bytes.
+
+    Renderiza o template HTML via Jinja2 e converte para PDF com WeasyPrint.
+
+    Args:
+        saida: Enxoval completo com linhas, categorias e progresso.
+        hoje: Data de geração; usa ``date.today()`` se omitida.
+
+    Returns:
+        Bytes do arquivo PDF (começa com ``%PDF``).
+    """
     html_str = _renderizar(saida, hoje)
     return HTML(string=html_str).write_pdf()
