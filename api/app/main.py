@@ -28,11 +28,13 @@ def criar_app(cfg: Configuracoes | None = None) -> FastAPI:
 
     from app.rotas import catalogo as rotas_catalogo
     from app.rotas import enxovais as rotas_enxovais
+    from app.rotas import exportar as rotas_exportar
     from app.rotas import linhas as rotas_linhas
 
     api.include_router(rotas_catalogo.router)
     api.include_router(rotas_enxovais.router)
     api.include_router(rotas_linhas.router)
+    api.include_router(rotas_exportar.router)
 
     app.include_router(api)
     if cfg.admin_habilitado:

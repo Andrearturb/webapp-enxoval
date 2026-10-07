@@ -111,6 +111,37 @@ export default function Ajustes() {
           </p>
         </section>
 
+        {/* Exportar */}
+        <section className="rounded-2xl bg-superficie p-4 shadow-sm">
+          <h2 className="mb-1 font-semibold text-texto">Exportar</h2>
+          <p className="mb-3 text-sm text-texto-suave">
+            Baixe sua lista personalizada em diferentes formatos.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`/api/v1/enxovais/${id}/exportar.xlsx`}
+              download
+              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+            >
+              📊 Baixar XLSX
+            </a>
+            <a
+              href={`/api/v1/enxovais/${id}/exportar.csv`}
+              download
+              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+            >
+              📄 Baixar CSV
+            </a>
+            <a
+              href={`/api/v1/enxovais/${id}/exportar.pdf`}
+              download
+              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+            >
+              📑 Baixar PDF
+            </a>
+          </div>
+        </section>
+
         {/* Copiar link */}
         <section className="rounded-2xl bg-superficie p-4 shadow-sm">
           <h2 className="mb-1 font-semibold text-texto">Compartilhar</h2>

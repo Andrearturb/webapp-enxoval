@@ -6,3 +6,6 @@ psycopg[binary]>=3.2,<4
 pydantic-settings>=2.4,<3
 pyyaml>=6,<7
 sqladmin>=0.20,<1
+openpyxl>=3.1,<4
+weasyprint>=62,<63
+pydyf>=0.11,<0.12

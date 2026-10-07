@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 10pt;
+    color: #2F3A33;
+    background: #FFFFFF;
+    padding: 20mm 15mm;
+  }
+
+  /* ── cabeçalho ── */
+  .cabecalho {
+    margin-bottom: 6mm;
+    border-bottom: 2px solid #4F6B57;
+    padding-bottom: 4mm;
+  }
+  .cabecalho h1 {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #4F6B57;
+  }
+  .cabecalho .meta {
+    font-size: 9pt;
+    color: #5A6660;
+    margin-top: 2mm;
+  }
+
+  /* ── progresso ── */
+  .progresso {
+    display: flex;
+    gap: 8mm;
+    background: #EEF1EA;
+    border-radius: 4mm;
+    padding: 3mm 5mm;
+    margin-bottom: 6mm;
+    font-size: 9pt;
+  }
+  .progresso .num { font-size: 13pt; font-weight: bold; color: #4F6B57; }
+
+  /* ── categoria ── */
+  .categoria {
+    margin-bottom: 5mm;
+    page-break-inside: avoid;
+  }
+  .categoria h2 {
+    font-size: 11pt;
+    font-weight: bold;
+    background: #EEF1EA;
+    color: #2F3A33;
+    padding: 2mm 3mm;
+    border-left: 3px solid #4F6B57;
+    margin-bottom: 1mm;
+  }
+
+  /* ── tabela de itens ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+  thead th {
+    background: #4F6B57;
+    color: #FFFFFF;
+    font-weight: bold;
+    text-align: left;
+    padding: 2mm 2.5mm;
+  }
+  tbody tr:nth-child(even) { background: #F7F5EE; }
+  tbody tr.faltando { background: #F7E4DF; }
+  tbody td { padding: 1.5mm 2.5mm; vertical-align: top; }
+  .num-col { text-align: right; }
+  .prioridade-essencial { color: #874129; font-weight: bold; }
+  .prioridade-util { color: #36513D; }
+  .prioridade-pode_esperar { color: #5E4B2A; }
+  .faltam-zero { color: #5A6660; }
+  .faltam-positivo { font-weight: bold; color: #6E2F2A; }
+
+  /* ── rodapé ── */
+  .rodape {
+    margin-top: 8mm;
+    border-top: 1px solid #EEF1EA;
+    padding-top: 3mm;
+    font-size: 8pt;
+    color: #5A6660;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+    @bottom-center {
+      content: "Página " counter(page) " de " counter(pages);
+      font-size: 8pt;
+      color: #5A6660;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="cabecalho">
+  <h1>Enxoval Inteligente</h1>
+  <p class="meta">
+    {{ cidade }} · Data prevista: {{ data_prevista }} ·
+    Gerado em {{ gerado_em }}
+  </p>
+</div>
+
+<div class="progresso">
+  <div>
+    <div class="num">{{ percentual }}%</div>
+    concluído
+  </div>
+  <div>
+    <div class="num">{{ atendidas }}</div>
+    de {{ total }} unidades atendidas
+  </div>
+  <div>
+    <div class="num">{{ faltam }}</div>
+    faltando
+  </div>
+</div>
+
+{% for categoria in categorias %}
+<div class="categoria">
+  <h2>{{ categoria.nome }}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Tam.</th>
+        <th class="num-col">Qtd.</th>
+        <th>Prioridade</th>
+        <th class="num-col">Comprada</th>
+        <th class="num-col">Ganhada</th>
+        <th class="num-col">Já tinha</th>
+        <th class="num-col">Faltam</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for linha in categoria.linhas %}
+      <tr class="{{ 'faltando' if linha.faltam > 0 else '' }}">
+        <td>{{ linha.nome }}{% if linha.rotulo_variante %} ({{ linha.rotulo_variante }}){% endif %}</td>
+        <td>{{ linha.tamanho or '' }}</td>
+        <td class="num-col">{{ linha.quantidade }}</td>
+        <td class="prioridade-{{ linha.prioridade }}">{{ linha.rotulo_prioridade }}</td>
+        <td class="num-col">{{ linha.comprada }}</td>
+        <td class="num-col">{{ linha.ganhada }}</td>
+        <td class="num-col">{{ linha.ja_tinha }}</td>
+        <td class="num-col {{ 'faltam-positivo' if linha.faltam > 0 else 'faltam-zero' }}">
+          {{ linha.faltam }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+<div class="rodape">
+  Enxoval Inteligente · As marcas e regras de segurança estão em processo de validação.
+  Consulte seu pediatra e fontes oficiais (SBP, INMETRO, CONTRAN) antes de tomar decisões.
+</div>
+
+</body>
+</html>

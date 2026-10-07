@@ -116,4 +116,54 @@ describe('Ajustes', () => {
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Falha ao apagar.'))
   })
+
+  // ── Task 6: seção Exportar ────────────────────────────────────────────────
+
+  it('seção Exportar está presente na página', async () => {
+    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
+    renderAjustes()
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    expect(screen.getByText(/exportar/i)).toBeInTheDocument()
+  })
+
+  it('link de download XLSX tem href correto', async () => {
+    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
+    renderAjustes()
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    const link = screen.getByRole('link', { name: /xlsx/i })
+    expect(link).toHaveAttribute('href', expect.stringContaining('/exportar.xlsx'))
+    expect(link).toHaveAttribute('href', expect.stringContaining('id-abc'))
+  })
+
+  it('link de download CSV tem href correto', async () => {
+    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
+    renderAjustes()
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    const link = screen.getByRole('link', { name: /csv/i })
+    expect(link).toHaveAttribute('href', expect.stringContaining('/exportar.csv'))
+    expect(link).toHaveAttribute('href', expect.stringContaining('id-abc'))
+  })
+
+  it('link de download PDF tem href correto', async () => {
+    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
+    renderAjustes()
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    const link = screen.getByRole('link', { name: /pdf/i })
+    expect(link).toHaveAttribute('href', expect.stringContaining('/exportar.pdf'))
+    expect(link).toHaveAttribute('href', expect.stringContaining('id-abc'))
+  })
+
+  it('links de exportação têm download attribute', async () => {
+    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
+    renderAjustes()
+    await waitFor(() => screen.getByText('Curitiba - PR'))
+    const links = [
+      screen.getByRole('link', { name: /xlsx/i }),
+      screen.getByRole('link', { name: /csv/i }),
+      screen.getByRole('link', { name: /pdf/i }),
+    ]
+    for (const link of links) {
+      expect(link).toHaveAttribute('download')
+    }
+  })
 })
