@@ -148,3 +148,16 @@ def test_item_de_seguranca_pode_ser_marcado_como_qualquer_outro(cliente, enxoval
     berco = _linha(corpo, "berco::")
     assert berco["e_seguranca"] is True
     assert berco["faltam"] == 0
+
+
+# ── Hardening: quantidade absurda deve dar 422 (não 500) ──────────────────────
+
+@pytest.mark.parametrize("campo", ["comprada", "ganhada", "ja_tinha"])
+def test_quantidade_absurda_da_422(cliente, enxoval_id, campo):
+    """Quantidade acima de 9999 deve retornar 422, não 500."""
+    corpo = {"comprada": 0, "ganhada": 0, "ja_tinha": 0, campo: 10_000}
+    resposta = cliente.put(
+        f"/api/v1/enxovais/{enxoval_id}/linhas/body:P:frio", json=corpo
+    )
+    assert resposta.status_code == 422
+    assert resposta.json()["erro"] == "dados_invalidos"

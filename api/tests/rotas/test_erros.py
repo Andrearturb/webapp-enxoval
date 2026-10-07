@@ -77,3 +77,27 @@ def test_erro_inesperado_nao_vaza_o_uuid_para_o_log(cliente_de_erros, caplog):
     assert resposta.status_code == 500
     assert uuid_exemplo not in caplog.text
     assert "[uuid]" in caplog.text
+
+
+# ── Hardening: rotas desconhecidas no formato padrão ─────────────────────────
+
+def test_rota_desconhecida_retorna_404_no_formato_padrao(cliente_de_erros):
+    """GET em rota inexistente deve retornar {erro, mensagem}, não {detail}."""
+    resposta = cliente_de_erros.get("/api/v1/rota-que-nao-existe")
+
+    assert resposta.status_code == 404
+    corpo = resposta.json()
+    assert corpo["erro"] == "nao_encontrado"
+    assert "mensagem" in corpo
+    assert "detail" not in corpo
+
+
+def test_metodo_nao_permitido_retorna_405_no_formato_padrao(cliente_de_erros):
+    """DELETE em rota que só aceita GET deve retornar {erro, mensagem}, não {detail}."""
+    resposta = cliente_de_erros.delete("/api/v1/_teste/invalido")
+
+    assert resposta.status_code == 405
+    corpo = resposta.json()
+    assert corpo["erro"] == "metodo_nao_permitido"
+    assert "mensagem" in corpo
+    assert "detail" not in corpo

@@ -4,6 +4,7 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import create_engine
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.admin import montar_admin
 from app.config import Configuracoes, obter_configuracoes
@@ -45,6 +46,26 @@ def criar_app(cfg: Configuracoes | None = None) -> FastAPI:
         return JSONResponse(
             status_code=erro.status,
             content={"erro": erro.codigo, "mensagem": erro.mensagem},
+        )
+
+    @app.exception_handler(StarletteHTTPException)
+    async def _erro_http(request: Request, erro: StarletteHTTPException) -> JSONResponse:
+        """Converte 404/405 e outros erros HTTP do Starlette para o formato padrão.
+
+        Sem este handler, rotas desconhecidas retornam ``{"detail": "Not Found"}``
+        (formato interno do Starlette/FastAPI), fora do contrato ``{erro, mensagem}``.
+        """
+        _codigos: dict[int, tuple[str, str]] = {
+            404: ("nao_encontrado", "Este endereço não existe."),
+            405: ("metodo_nao_permitido", "Método HTTP não permitido neste endereço."),
+        }
+        codigo, mensagem = _codigos.get(
+            erro.status_code,
+            ("erro_http", "Erro na requisição HTTP."),
+        )
+        return JSONResponse(
+            status_code=erro.status_code,
+            content={"erro": codigo, "mensagem": mensagem},
         )
 
     @app.exception_handler(RequestValidationError)

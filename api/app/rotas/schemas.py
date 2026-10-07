@@ -56,11 +56,15 @@ class RespostasEntrada(BaseModel):
 
 
 class MarcacaoEntrada(BaseModel):
-    """Quantidades marcadas pela família para uma linha da planilha."""
+    """Quantidades marcadas pela família para uma linha da planilha.
 
-    comprada: int = Field(ge=0, description="Unidades compradas pela família.")
-    ganhada: int = Field(ge=0, description="Unidades ganhas (chá de bebê, etc.).")
-    ja_tinha: int = Field(ge=0, description="Unidades que já existiam em casa.")
+    O limite de 9999 por campo evita que uma quantidade absurda cause overflow
+    no banco, devolvendo 422 ao invés de 500.
+    """
+
+    comprada: int = Field(ge=0, le=9999, description="Unidades compradas pela família.")
+    ganhada: int = Field(ge=0, le=9999, description="Unidades ganhas (chá de bebê, etc.).")
+    ja_tinha: int = Field(ge=0, le=9999, description="Unidades que já existiam em casa.")
 
 
 class CompletarEntrada(BaseModel):

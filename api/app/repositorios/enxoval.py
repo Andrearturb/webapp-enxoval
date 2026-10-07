@@ -8,11 +8,12 @@ Responsabilidades exclusivas deste módulo:
 - Persistir novas instâncias de Enxoval.
 - Atualizar campos de um Enxoval existente.
 - Apagar enxovais (com cascata nas linhas).
-- Buscar, criar e atualizar EnxovalLinha.
+- Buscar, criar e atualizar EnxovalLinha com proteção contra corrida de dados.
 """
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.familia import Enxoval, EnxovalLinha
@@ -22,9 +23,8 @@ from app.erros import EnxovalNaoEncontrado
 class EnxovalRepository:
     """Acesso a dados para a entidade Enxoval e suas linhas.
 
-    Todos os métodos operam dentro da sessão injetada e fazem ``flush``
-    ao final para materializar as mudanças sem commitar a transação —
-    o commit é responsabilidade do chamador (a camada de rota).
+    Todos os métodos operam dentro da sessão injetada. O commit é
+    responsabilidade do chamador (a camada de rota).
 
     Args:
         sessao: Sessão SQLAlchemy ativa.
@@ -91,8 +91,11 @@ class EnxovalRepository:
     def buscar_ou_criar_linha(self, enxoval: Enxoval, chave: str) -> EnxovalLinha:
         """Retorna a linha existente ou cria uma nova com quantidades zeradas.
 
-        Chaves que não existem na lista calculada são aceitas para preservar
-        marcações de famílias que mudaram de respostas.
+        Protegido contra corrida de dados (race condition): se duas requisições
+        simultâneas tentarem criar a mesma linha nova, a que perder a corrida
+        receberá um ``IntegrityError`` na chave primária. Nesse caso, a sessão
+        é revertida ao savepoint anterior e a linha já criada pela outra
+        requisição é retornada via ``refresh``.
 
         Args:
             enxoval: Enxoval dono da linha.
@@ -101,14 +104,32 @@ class EnxovalRepository:
         Returns:
             Instância ORM de EnxovalLinha (existente ou recém-criada).
         """
+        # Linha já está em memória na sessão atual?
         for linha in enxoval.linhas:
             if linha.chave == chave:
                 return linha
-        # qtd_* ficam None em memória até o flush aplicar o default da coluna —
-        # completar_linha soma essas quantidades antes de qualquer flush.
-        linha = EnxovalLinha(chave=chave, qtd_comprada=0, qtd_ganhada=0, qtd_ja_tinha=0)
-        enxoval.linhas.append(linha)
-        return linha
+
+        # Cria nova linha e tenta persistir
+        nova = EnxovalLinha(chave=chave, qtd_comprada=0, qtd_ganhada=0, qtd_ja_tinha=0)
+        enxoval.linhas.append(nova)
+
+        # Usa savepoint para poder reverter só este INSERT em caso de corrida
+        savepoint = self._sessao.begin_nested()
+        try:
+            self._sessao.flush()
+            savepoint.commit()
+            return nova
+        except IntegrityError:
+            # Outra requisição ganhou a corrida — descarta a linha local
+            savepoint.rollback()
+            enxoval.linhas.remove(nova)
+            self._sessao.expire(enxoval)
+            # Recarrega as linhas do banco e retorna a que foi criada pela outra req
+            self._sessao.refresh(enxoval)
+            for linha in enxoval.linhas:
+                if linha.chave == chave:
+                    return linha
+            raise  # nunca deve chegar aqui
 
     def salvar_linha(self, linha: EnxovalLinha) -> EnxovalLinha:
         """Faz flush na sessão para persistir alterações numa linha.

@@ -5,8 +5,8 @@ Antes de ir para produção, precisa estar protegido pelo Keycloak (bloqueio de 
 from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 from sqlalchemy import Engine, inspect
+from sqlalchemy.exc import IntegrityError
 
-from app.texto import normalizar_busca
 from app.db.catalogo import (
     Categoria,
     Estado,
@@ -21,6 +21,41 @@ from app.db.catalogo import (
     PerfilClima,
     RegraSeguranca,
 )
+from app.texto import normalizar_busca
+
+
+# ---------------------------------------------------------------------------
+# Mixin de proteção contra exclusão de registros referenciados por FK
+# ---------------------------------------------------------------------------
+
+_MENSAGENS_FK: dict[type, str] = {
+    Categoria:   "Não é possível apagar: há itens vinculados a esta categoria.",
+    FaseRoteiro: "Não é possível apagar: há itens ou tamanhos vinculados a esta fase.",
+    Estado:      "Não é possível apagar: há municípios vinculados a este estado.",
+    Marca:       "Não é possível apagar: há itens que usam esta marca.",
+}
+
+
+class _ProtegerExclusao:
+    """Intercepta IntegrityError ao apagar e exibe mensagem legível.
+
+    Sem este mixin, apagar um registro referenciado por FK causa erro 500.
+    """
+
+    async def on_model_delete(self, model, request) -> None:  # type: ignore[override]
+        try:
+            await super().on_model_delete(model, request)  # type: ignore[misc]
+        except IntegrityError:
+            msg = _MENSAGENS_FK.get(
+                type(model),
+                "Não é possível apagar: este registro está em uso.",
+            )
+            raise ValueError(msg) from None
+
+
+# ---------------------------------------------------------------------------
+# Views do catálogo
+# ---------------------------------------------------------------------------
 
 
 class ItemAdmin(ModelView, model=Item):
@@ -28,7 +63,6 @@ class ItemAdmin(ModelView, model=Item):
     column_list = [Item.nome, Item.categoria, Item.prioridade_base, Item.e_seguranca]
     column_searchable_list = [Item.nome, Item.slug]
     column_sortable_list = [Item.nome, Item.prioridade_base]
-    # Tamanhos, regras e marcas têm telas próprias; listá-los aqui misturaria os de outros itens.
     form_excluded_columns = [Item.tamanhos, Item.regras, Item.marcas]
 
 
@@ -42,7 +76,7 @@ class ItemRegraAdmin(ModelView, model=ItemRegra):
     column_list = [ItemRegra.item, ItemRegra.condicao, ItemRegra.efeito, ItemRegra.valor]
 
 
-class MarcaAdmin(ModelView, model=Marca):
+class MarcaAdmin(_ProtegerExclusao, ModelView, model=Marca):
     name, name_plural, icon = "Marca", "Marcas", "fa-solid fa-tag"
     column_list = [Marca.nome, Marca.faixa_padrao, Marca.validado, Marca.revisado_em]
     column_searchable_list = [Marca.nome]
@@ -66,12 +100,12 @@ class RegraSegurancaAdmin(ModelView, model=RegraSeguranca):
     ]
 
 
-class CategoriaAdmin(ModelView, model=Categoria):
+class CategoriaAdmin(_ProtegerExclusao, ModelView, model=Categoria):
     name, name_plural, icon = "Categoria", "Categorias", "fa-solid fa-layer-group"
     column_list = [Categoria.nome, Categoria.ordem]
 
 
-class FaseRoteiroAdmin(ModelView, model=FaseRoteiro):
+class FaseRoteiroAdmin(_ProtegerExclusao, ModelView, model=FaseRoteiro):
     name, name_plural, icon = "Fase do roteiro", "Fases do roteiro", "fa-solid fa-route"
     column_list = [FaseRoteiro.ordem, FaseRoteiro.nome, FaseRoteiro.inicio, FaseRoteiro.fim]
 
@@ -90,7 +124,7 @@ class PerfilClimaAdmin(ModelView, model=PerfilClima):
     column_list = [PerfilClima.nome, PerfilClima.meses_frios, PerfilClima.meses_frescos]
 
 
-class EstadoAdmin(ModelView, model=Estado):
+class EstadoAdmin(_ProtegerExclusao, ModelView, model=Estado):
     name, name_plural, icon = "Estado", "Estados", "fa-solid fa-map"
     column_list = [Estado.uf, Estado.nome, Estado.perfil_padrao]
 
@@ -106,6 +140,10 @@ class MunicipioAdmin(ModelView, model=Municipio):
         model.nome_busca = normalizar_busca(model.nome)
 
 
+# ---------------------------------------------------------------------------
+# Registro
+# ---------------------------------------------------------------------------
+
 VISOES = [
     ItemAdmin,
     ItemTamanhoAdmin,
@@ -120,7 +158,6 @@ VISOES = [
     EstadoAdmin,
     MunicipioAdmin,
 ]
-
 
 ROTULOS = {
     "id": "ID", "slug": "Identificador", "nome": "Nome", "ordem": "Ordem", "codigo": "Código",
@@ -162,6 +199,7 @@ for _visao in VISOES:
 
 
 def montar_admin(app: FastAPI, engine: Engine) -> None:
+    """Monta o painel admin no app FastAPI com todas as views de catálogo."""
     admin = Admin(app, engine, base_url="/admin", title="Enxoval Inteligente · Conteúdo")
     for visao in VISOES:
         admin.add_view(visao)
