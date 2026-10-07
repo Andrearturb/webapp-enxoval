@@ -37,17 +37,17 @@ function CardFase({ fase }: { fase: FaseSaida }) {
           {fase.nome}
         </h2>
         {fase.atual && (
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
+          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-principal">
             Fase atual
           </span>
         )}
       </div>
 
-      <p className={`mt-0.5 text-sm ${fase.atual ? 'text-white/70' : 'text-texto-suave'}`}>
+      <p className={`mt-0.5 text-sm ${fase.atual ? 'text-white' : 'text-texto-suave'}`}>
         {formatarIntervalo(fase.inicio, fase.fim)}
       </p>
 
-      <p className={`mt-2 text-sm leading-relaxed ${fase.atual ? 'text-white/90' : 'text-texto'}`}>
+      <p className={`mt-2 text-sm leading-relaxed ${fase.atual ? 'text-white' : 'text-texto'}`}>
         {fase.texto}
       </p>
     </li>

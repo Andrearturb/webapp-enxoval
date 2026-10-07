@@ -14,6 +14,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    // Permite que o container E2E acesse via hostname "web" (rede Docker)
+    allowedHosts: ['web', 'localhost'],
     watch: {
       // O Docker Desktop no Windows não propaga eventos de inotify para
       // bind mounts; sem polling, o Vite nunca percebe um arquivo mudado.
@@ -30,5 +32,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.ts'],
+    // Exclui specs do Playwright — rodados separadamente via npx playwright test
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })

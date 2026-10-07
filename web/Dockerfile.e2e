@@ -1,0 +1,12 @@
+# Imagem dedicada para rodar os testes E2E com Playwright.
+# Usa a imagem oficial mcr.microsoft.com/playwright que já inclui
+# Chromium, Firefox e WebKit com todas as dependências de sistema.
+FROM mcr.microsoft.com/playwright:v1.63.0-noble
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install --legacy-peer-deps
+COPY . .
+
+# O entrypoint padrão é npx playwright test
+CMD ["npx", "playwright", "test"]

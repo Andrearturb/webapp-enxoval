@@ -31,6 +31,27 @@ services:
     depends_on:
       - api
 
+  # Serviço de testes E2E (Playwright + axe). Não sobe automaticamente.
+  # Uso: docker compose run --rm e2e
+  e2e:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.e2e
+    environment:
+      BASE_URL: http://web:5173
+      API_URL: http://api:8000
+      # Desabilita rate limit de criação para os testes E2E não receberem 429
+      LIMITE_CRIACAO_MAXIMO: 1000
+    depends_on:
+      - web
+      - api
+    volumes:
+      # Monta o código-fonte para edição sem rebuild (dev)
+      - ./web:/app
+      - /app/node_modules
+    profiles:
+      - e2e
+
 volumes:
   dados_db:
   node_modules_web:

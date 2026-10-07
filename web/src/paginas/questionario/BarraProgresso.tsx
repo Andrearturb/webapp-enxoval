@@ -6,7 +6,13 @@ interface Props {
 export function BarraProgresso({ passo, total }: Props) {
   const percentual = Math.round((passo / total) * 100)
   return (
-    <div role="progressbar" aria-valuenow={passo} aria-valuemin={1} aria-valuemax={total}>
+    <div
+      role="progressbar"
+      aria-valuenow={passo}
+      aria-valuemin={1}
+      aria-valuemax={total}
+      aria-label={`Passo ${passo} de ${total}`}
+    >
       <p className="text-sm text-texto-suave">
         Passo {passo} de {total}
       </p>

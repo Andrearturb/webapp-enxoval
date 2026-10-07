@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.acesso import verificar_acesso
+from app.config import obter_configuracoes
 from app.db.sessao import obter_sessao
 from app.dependencias import obter_servico
 from app.limite import LimitePorIp
@@ -21,7 +22,7 @@ from app.rotas.schemas import (
 from app.servicos.apresentacao import montar_saida
 from app.servicos.enxoval_service import EnxovalService
 
-MAXIMO_CRIACOES = 20
+MAXIMO_CRIACOES = obter_configuracoes().limite_criacao_maximo
 JANELA_SEGUNDOS = 3600
 limite_de_criacao = LimitePorIp(MAXIMO_CRIACOES, JANELA_SEGUNDOS)
 

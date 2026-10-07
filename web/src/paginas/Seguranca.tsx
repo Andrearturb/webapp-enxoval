@@ -38,7 +38,7 @@ function CardAlerta({ alerta }: { alerta: AlertaSaida }) {
           {alerta.base}
         </span>
       </div>
-      <p className="mt-2 text-xs text-alerta-texto/70">
+      <p className="mt-2 text-xs text-alerta-texto">
         Ativo de {formatarData(alerta.ativo_a_partir)} a {formatarData(alerta.ativo_ate)}
       </p>
     </li>

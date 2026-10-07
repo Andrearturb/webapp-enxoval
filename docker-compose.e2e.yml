@@ -1,0 +1,8 @@
+# Override para testes E2E: aumenta o limite de criação da API
+# para evitar 429 quando os testes criam muitos enxovais em sequência.
+#
+# Uso: docker compose -f docker-compose.yml -f docker-compose.e2e.yml run --rm e2e
+services:
+  api:
+    environment:
+      LIMITE_CRIACAO_MAXIMO: 1000
