@@ -14,7 +14,7 @@
     "noEmit": true,
 
     /* Tipos do Playwright disponíveis nos specs */
-    "types": ["node", "@playwright/test", "axe-core"],
+    "types": ["node", "@playwright/test"],
 
     /* Linting relaxado para testes */
     "noUnusedLocals": false,
