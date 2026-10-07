@@ -15,3 +15,6 @@ __pycache__/
 # Node
 node_modules/
 dist/
+
+# Kiro/Claude worktrees e dados internos da IDE
+.claude/
