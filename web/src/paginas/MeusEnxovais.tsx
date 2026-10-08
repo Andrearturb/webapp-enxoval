@@ -12,7 +12,6 @@ import { Marca } from '../componentes/Marca'
 import {
   ArrowRight,
   CalendarDays,
-  LogOut,
   Plus,
   ShoppingBag,
 } from 'lucide-react'
@@ -90,7 +89,7 @@ function CardEnxoval({ enxoval }: { enxoval: EnxovalResumo }) {
 }
 
 export default function MeusEnxovais() {
-  const { nomeUsuario, sair } = useAuth()
+  const { nomeUsuario } = useAuth()
 
   const {
     data: enxovais,
@@ -109,17 +108,10 @@ export default function MeusEnxovais() {
           <Marca destino="/meus-enxovais" />
           {nomeUsuario && (
             <div className="flex items-center gap-3">
-              <MinhaContaLink />
               <span className="hidden max-w-48 truncate text-sm text-texto-suave sm:inline">
                 {nomeUsuario}
               </span>
-              <button
-                type="button"
-                onClick={sair}
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-borda px-3 text-sm text-texto-suave hover:text-principal"
-              >
-                <LogOut size={15} aria-hidden="true" /> Sair
-              </button>
+              <MinhaContaLink />
             </div>
           )}
         </div>
