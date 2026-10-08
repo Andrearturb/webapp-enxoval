@@ -61,14 +61,16 @@ precisam confirmar seu endereço. A API rejeita tokens não verificados, inclusi
 tokens emitidos antes dessa configuração.
 
 Em **Minha conta** (`/minha-conta`), a pessoa pode escolher um dos seis avatares
-(ursinho, coelhinho, elefantinho, patinho, nuvem e lua) ou usar suas iniciais, consultar
+(ursinho, coelhinho, elefantinho, patinho, nuvem e lua), consultar
 nome e e-mail, editar dados pessoais, alterar senha e sair. A edição de nome e
 senha abre o fluxo do Keycloak e retorna ao perfil. A escolha é vinculada ao `sub`
-da conta e armazenada no PostgreSQL (`perfil_usuario`). A API aceita somente os
+da conta e armazenada no PostgreSQL (`perfil_usuario`). Clicar no avatar atual
+abre um modal com as seis opções; escolher uma salva e fecha o modal. Contas sem
+escolha usam o ursinho. Fotos e iniciais não são exibidas. A API aceita somente os
 seis códigos do catálogo em `PUT /api/v1/perfil/avatar`; o envio de arquivos foi
 retirado. As ilustrações são arquivos WebP locais em `web/public/avatares`.
-Fotos cadastradas anteriormente são preservadas e exibidas até a pessoa escolher
-um avatar ou usar suas iniciais. A migração `c4e8a1b7d092` não altera essas fotos.
+O perfil retorna apenas `avatar`; não existe operação para remover a escolha.
+A coluna legada `foto` não é exposta nem usada para a imagem do perfil.
 Execute `docker compose exec api alembic upgrade head` antes de usar o perfil
 em um banco existente. Faça backup do banco para preservar os perfis e fotos antigas.
 

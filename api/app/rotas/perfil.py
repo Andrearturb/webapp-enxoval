@@ -1,7 +1,6 @@
-import base64
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -14,8 +13,7 @@ AvatarCodigo = Literal["ursinho", "coelhinho", "elefantinho", "patinho", "nuvem"
 
 
 class PerfilSaida(BaseModel):
-    foto: str | None = None
-    avatar: AvatarCodigo | None = None
+    avatar: AvatarCodigo = "ursinho"
 
 
 class AvatarEntrada(BaseModel):
@@ -29,10 +27,7 @@ def _dono(dono_id: str | None) -> str:
 
 
 def _saida(perfil: PerfilUsuario | None) -> PerfilSaida:
-    return PerfilSaida(
-        foto="data:image/jpeg;base64," + base64.b64encode(perfil.foto).decode() if perfil and perfil.foto else None,
-        avatar=perfil.avatar if perfil else None,
-    )
+    return PerfilSaida(avatar=perfil.avatar if perfil and perfil.avatar else "ursinho")
 
 
 @router.get("", response_model=PerfilSaida)
@@ -52,12 +47,3 @@ def salvar_avatar(entrada: AvatarEntrada, dono_id: DonoId, sessao: Session = Dep
         perfil.foto = None
     sessao.commit()
     return _saida(perfil)
-
-
-@router.delete("/avatar", status_code=204)
-def remover_avatar(dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> Response:
-    perfil = sessao.get(PerfilUsuario, _dono(dono_id))
-    if perfil:
-        sessao.delete(perfil)
-        sessao.commit()
-    return Response(status_code=204)

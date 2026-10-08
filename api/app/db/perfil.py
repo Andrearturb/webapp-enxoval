@@ -5,7 +5,7 @@ from app.db.base import Base
 
 
 class PerfilUsuario(Base):
-    """Avatar da conta; fotos antigas são mantidas até uma nova escolha."""
+    """Avatar da conta. A coluna foto é legada e não é exposta pela aplicação."""
 
     __tablename__ = "perfil_usuario"
     dono_id: Mapped[str] = mapped_column(String(255), primary_key=True)

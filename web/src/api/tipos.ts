@@ -261,8 +261,7 @@ export interface paths {
         /** Salvar Avatar */
         put: operations["salvar_avatar_api_v1_perfil_avatar_put"];
         post?: never;
-        /** Remover Avatar */
-        delete: operations["remover_avatar_api_v1_perfil_avatar_delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -702,10 +701,12 @@ export interface components {
         };
         /** PerfilSaida */
         app__rotas__perfil__PerfilSaida: {
-            /** Foto */
-            foto?: string | null;
-            /** Avatar */
-            avatar?: ("ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua") | null;
+            /**
+             * Avatar
+             * @default ursinho
+             * @enum {string}
+             */
+            avatar: "ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua";
         };
         /**
          * PerfilSaida
@@ -1310,24 +1311,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-        };
-    };
-    remover_avatar_api_v1_perfil_avatar_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

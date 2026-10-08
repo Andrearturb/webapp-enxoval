@@ -2,8 +2,7 @@ import { apiFetch } from './cliente'
 import type { AvatarCodigo } from '../componentes/avatares'
 
 export interface PerfilUsuario {
-  foto: string | null
-  avatar: AvatarCodigo | null
+  avatar: AvatarCodigo
 }
 
 export function getPerfil(): Promise<PerfilUsuario> {
@@ -15,8 +14,4 @@ export function salvarAvatar(avatar: AvatarCodigo): Promise<PerfilUsuario> {
     method: 'PUT',
     body: JSON.stringify({ avatar }),
   })
-}
-
-export function removerAvatar(): Promise<void> {
-  return apiFetch('/perfil/avatar', { method: 'DELETE' })
 }

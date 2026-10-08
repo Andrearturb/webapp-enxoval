@@ -7,13 +7,13 @@ import {
   KeyRound,
   LogOut,
   Pencil,
-  Check,
+
 } from 'lucide-react'
 import { keycloak, keycloakHabilitado } from '../auth/keycloak'
 import { useAuth } from '../auth/AuthProvider'
 import { usePerfil } from '../hooks/usePerfil'
-import { removerAvatar, salvarAvatar } from '../api/perfil'
-import { AVATARES, imagemAvatar } from '../componentes/avatares'
+import { salvarAvatar } from '../api/perfil'
+import { ModalAvatar } from '../componentes/ModalAvatar'
 import { ErroApi } from '../api/cliente'
 import { Marca } from '../componentes/Marca'
 import { AvatarUsuario } from '../componentes/MinhaContaLink'
@@ -34,28 +34,19 @@ export default function MinhaConta() {
   const [erro, setErro] = useState<string | null>(null)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [redirecionando, setRedirecionando] = useState(false)
+  const [modalAberto, setModalAberto] = useState(false)
   const avatar = useMutation({
     mutationFn: salvarAvatar,
     onSuccess: (novo) => {
       qc.setQueryData(['perfil', keycloak.subject], novo)
       setMensagem('Avatar atualizado.')
+      setModalAberto(false)
     },
     onError: (e) =>
       setErro(
         e instanceof ErroApi
           ? e.message
           : 'Não foi possível atualizar seu avatar.',
-      ),
-  })
-  const remover = useMutation({
-    mutationFn: removerAvatar,
-    onSuccess: () => {
-      qc.setQueryData(['perfil', keycloak.subject], { foto: null, avatar: null })
-      setMensagem('Seu perfil voltou a usar suas iniciais.')
-    },
-    onError: (e) =>
-      setErro(
-        e instanceof ErroApi ? e.message : 'Não foi possível atualizar seu avatar.',
       ),
   })
   async function editar(action: 'UPDATE_PROFILE' | 'UPDATE_PASSWORD') {
@@ -76,7 +67,7 @@ export default function MinhaConta() {
     [p?.firstName, p?.lastName].filter(Boolean).join(' ') ||
     nomeUsuario ||
     'Minha conta'
-  const ocupado = avatar.isPending || remover.isPending
+  const avatarAtual = perfil.data?.avatar ?? 'ursinho'
 
   return (
     <div className="min-h-screen bg-fundo">
@@ -108,7 +99,7 @@ export default function MinhaConta() {
           <p>O perfil fica disponível quando o login está habilitado.</p>
         ) : (
           <>
-            {erro && (
+            {erro && !modalAberto && (
               <p
                 role="alert"
                 className="rounded-xl bg-alerta-fundo p-4 text-sm text-alerta-texto"
@@ -126,78 +117,58 @@ export default function MinhaConta() {
             )}
             <section
               aria-label="Avatar do perfil"
-              aria-busy={ocupado}
               className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6"
             >
               <div className="flex items-center gap-5">
-                <AvatarUsuario avatar={perfil.data?.avatar} foto={perfil.data?.foto} nome={nome} grande />
-                <div>
-                  <h2 className="font-titulo text-xl font-semibold">
-                    Seu avatar
-                  </h2>
-                  <p className="mt-2 text-sm text-texto-suave">
-                    Escolha uma ilustração para acompanhar sua conta.
-                  </p>
-                </div>
-              </div>
-              {perfil.data?.foto && (
-                <p className="mt-4 text-sm text-texto-suave">
-                  Você pode manter sua foto atual ou escolher um dos avatares abaixo.
-                </p>
-              )}
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label="Escolha seu avatar">
-                {AVATARES.map(({ codigo, nome: rotulo }) => {
-                  const selecionado = perfil.data?.avatar === codigo
-                  return (
-                    <button
-                      key={codigo}
-                      type="button"
-                      aria-label={`Escolher ${rotulo}`}
-                      aria-pressed={selecionado}
-                      disabled={ocupado || perfil.isLoading || perfil.isError}
-                      onClick={() => {
-                        if (selecionado) return
-                        setErro(null)
-                        setMensagem(null)
-                        avatar.mutate(codigo)
-                      }}
-                      className={`relative flex flex-col items-center gap-3 rounded-2xl border-2 px-3 py-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-principal disabled:cursor-wait disabled:opacity-60 ${selecionado ? 'border-principal bg-principal-suave' : 'border-borda bg-fundo hover:border-principal/50'}`}
-                    >
-                      <img src={imagemAvatar(codigo)} alt="" width={96} height={96} className="size-20 rounded-full object-cover sm:size-24" />
-                      <span className="text-sm font-medium text-texto">{rotulo}</span>
-                      {selecionado && <Check size={16} aria-hidden="true" className="absolute right-2 top-2 text-principal" />}
-                    </button>
-                  )
-                })}
-              </div>
-              {ocupado && <p className="mt-4 text-sm text-texto-suave">Atualizando seu avatar...</p>}
-              {(perfil.data?.avatar || perfil.data?.foto) && (
-                <Button
+                <button
                   type="button"
-                  variant="secundario"
-                  className="mt-5"
-                  disabled={ocupado || perfil.isError}
+                  aria-label="Alterar avatar"
+                  aria-haspopup="dialog"
+                  aria-expanded={modalAberto}
+                  disabled={perfil.isLoading || perfil.isError}
                   onClick={() => {
                     setErro(null)
                     setMensagem(null)
-                    remover.mutate()
+                    setModalAberto(true)
                   }}
+                  className="relative shrink-0 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-principal disabled:opacity-50"
                 >
-                  Usar minhas iniciais
-                </Button>
-              )}
+                  <AvatarUsuario avatar={avatarAtual} grande />
+                  <span className="absolute bottom-0 right-0 flex size-7 items-center justify-center rounded-full border-2 border-superficie bg-principal text-white">
+                    <Pencil size={13} aria-hidden="true" />
+                  </span>
+                </button>
+                <div>
+                  <h2 className="font-titulo text-xl font-semibold">Seu avatar</h2>
+                  <p className="mt-2 text-sm text-texto-suave">
+                    Clique no avatar para escolher outra ilustração.
+                  </p>
+                </div>
+              </div>
               {perfil.isError && (
                 <p role="alert" className="mt-3 text-sm text-alerta-texto">
                   Não foi possível carregar seu avatar.{' '}
-                  <button
-                    className="min-h-11 underline"
-                    onClick={() => void perfil.refetch()}
-                  >
+                  <button className="min-h-11 underline" onClick={() => void perfil.refetch()}>
                     Tentar novamente
                   </button>
                 </p>
               )}
             </section>
+            <ModalAvatar
+              aberto={modalAberto}
+              atual={avatarAtual}
+              salvando={avatar.isPending}
+              erro={erro}
+              onFechar={() => setModalAberto(false)}
+              onEscolher={(codigo) => {
+                if (codigo === avatarAtual) {
+                  setModalAberto(false)
+                  return
+                }
+                setErro(null)
+                avatar.mutate(codigo)
+              }}
+            />
             <section
               aria-label="Dados pessoais"
               className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6"
