@@ -5,16 +5,19 @@ import { BrowserRouter } from 'react-router-dom'
 import '@fontsource/dm-sans/400.css'
 import '@fontsource/lora/600.css'
 import './index.css'
+import { AuthProvider } from './auth/AuthProvider'
 import { AppRoutes } from './App'
 
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AuthProvider>
   </StrictMode>,
 )

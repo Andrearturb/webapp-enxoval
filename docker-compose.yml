@@ -1,4 +1,7 @@
 services:
+  # ---------------------------------------------------------------------------
+  # Banco da aplicação
+  # ---------------------------------------------------------------------------
   db:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -14,6 +17,9 @@ services:
       timeout: 3s
       retries: 10
 
+  # ---------------------------------------------------------------------------
+  # API FastAPI
+  # ---------------------------------------------------------------------------
   api:
     build: ./api
     restart: unless-stopped
@@ -21,18 +27,35 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       ADMIN_HABILITADO: ${ADMIN_HABILITADO:-false}
       DOCS_HABILITADO: ${DOCS_HABILITADO:-false}
+      # Keycloak — aponta para o keycloak-server externo
+      # Mude KEYCLOAK_HABILITADO para true quando o keycloak-server estiver no ar
+      KEYCLOAK_URL: ${KEYCLOAK_URL:-http://localhost:8080}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/enxoval}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-enxoval}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-webapp}
+      KEYCLOAK_HABILITADO: ${KEYCLOAK_HABILITADO:-false}
     depends_on:
       db:
         condition: service_healthy
 
+  # ---------------------------------------------------------------------------
+  # Frontend Vite/React
+  # ---------------------------------------------------------------------------
   web:
     build: ./web
     restart: unless-stopped
+    environment:
+      VITE_KEYCLOAK_HABILITADO: ${KEYCLOAK_HABILITADO:-false}
+      VITE_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8080}
+      VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-enxoval}
+      VITE_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-webapp}
     depends_on:
       - api
 
-  # Serviço de testes E2E (Playwright + axe). Não sobe automaticamente.
+  # ---------------------------------------------------------------------------
+  # Testes E2E (Playwright + axe). Não sobe automaticamente.
   # Uso: docker compose run --rm e2e
+  # ---------------------------------------------------------------------------
   e2e:
     build:
       context: ./web
@@ -40,13 +63,11 @@ services:
     environment:
       BASE_URL: http://web:5173
       API_URL: http://api:8000
-      # Desabilita rate limit de criação para os testes E2E não receberem 429
       LIMITE_CRIACAO_MAXIMO: 1000
     depends_on:
       - web
       - api
     volumes:
-      # Monta o código-fonte para edição sem rebuild (dev)
       - ./web:/app
       - /app/node_modules
     profiles:

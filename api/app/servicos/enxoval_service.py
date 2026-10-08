@@ -1,16 +1,7 @@
 """Serviço de domínio para o Enxoval: orquestra repositório, motor e validações.
 
-O ``EnxovalService`` centraliza as operações de domínio que antes estavam
-espalhadas em funções livres em ``servicos/escrita.py`` e ``servicos/leitura.py``.
-A divisão em classe facilita:
-
-- **Injeção de dependência:** o repositório pode ser trocado por um mock em testes.
-- **Coesão:** todas as operações sobre um enxoval ficam num único lugar.
-- **Testabilidade:** métodos podem ser testados individualmente.
-
-As funções livres existentes (``criar_enxoval``, ``ler_enxoval``, etc.) continuam
-funcionando — elas delegam para este serviço para manter retrocompatibilidade
-com as rotas durante a transição.
+Centraliza todas as operações sobre enxovais, incluindo controle de acesso
+por proprietário (``dono_id``) quando a autenticação Keycloak está ativa.
 """
 import uuid
 from datetime import date
@@ -43,19 +34,21 @@ class EnxovalService:
     """Serviço de domínio para operações sobre o Enxoval.
 
     Responsabilidades:
-    - Criar, editar e apagar enxovais.
-    - Ler o enxoval completo (calculado + marcações).
+    - Criar, editar, apagar e ler enxovais com controle de acesso por dono.
+    - Listar enxovais do usuário autenticado.
     - Marcar e completar linhas da planilha.
     - Validar dados de domínio (data prevista, município, quantidades).
 
     Args:
         sessao: Sessão SQLAlchemy ativa.
         hoje: Data de referência para cálculos de fase e validações.
+        dono_id: ``sub`` do JWT Keycloak do usuário logado, ou ``None`` em dev.
     """
 
-    def __init__(self, sessao: Session, hoje: date) -> None:
+    def __init__(self, sessao: Session, hoje: date, dono_id: str | None = None) -> None:
         self._sessao = sessao
         self._hoje = hoje
+        self._dono_id = dono_id
         self._repo = EnxovalRepository(sessao)
 
     # ------------------------------------------------------------------
@@ -63,7 +56,7 @@ class EnxovalService:
     # ------------------------------------------------------------------
 
     def ler(self, enxoval_id: uuid.UUID) -> EnxovalCompleto:
-        """Monta o enxoval completo: calcula a lista e mescla com as marcações.
+        """Monta o enxoval completo verificando a posse.
 
         Args:
             enxoval_id: UUID do enxoval a ser lido.
@@ -72,9 +65,9 @@ class EnxovalService:
             ``EnxovalCompleto`` com motor calculado, progresso e catálogo.
 
         Raises:
-            EnxovalNaoEncontrado: Se o UUID não existir.
+            EnxovalNaoEncontrado: Se o UUID não existir ou pertencer a outro dono.
         """
-        enxoval = self._repo.buscar_por_id(enxoval_id)
+        enxoval = self._repo.buscar_por_id_e_dono(enxoval_id, self._dono_id)
         municipio = self._sessao.get(Municipio, enxoval.municipio_codigo)
         perfis = perfis_por_codigo(self._sessao)
         from app.motor.tipos import PerfilClima as PerfilClimaTipo
@@ -82,11 +75,9 @@ class EnxovalService:
             enxoval.perfil_clima,
             PerfilClimaTipo(enxoval.perfil_clima, frozenset(), frozenset()),
         )
-
         catalogo = carregar_catalogo(self._sessao)
         from app.servicos.leitura import respostas_do_motor
         calculado = montar_enxoval(respostas_do_motor(enxoval, perfil), catalogo, self._hoje)
-
         marcadas = {
             linha.chave: Marcacao(
                 comprada=linha.qtd_comprada,
@@ -97,7 +88,6 @@ class EnxovalService:
         }
         resultado = progresso(calculado.linhas, marcadas)
         fora = tuple(l for l in enxoval.linhas if l.chave in set(resultado.fora_da_lista))
-
         return EnxovalCompleto(
             enxoval=enxoval,
             municipio=municipio,
@@ -108,6 +98,16 @@ class EnxovalService:
             fora_da_lista=tuple(sorted(fora, key=lambda l: l.chave)),
             catalogo=catalogo,
         )
+
+    def listar(self) -> list[Enxoval]:
+        """Lista os enxovais do usuário logado, do mais recente ao mais antigo.
+
+        Em modo dev sem autenticação, retorna todos os enxovais do banco.
+
+        Returns:
+            Lista de ``Enxoval`` sem as linhas carregadas (apenas metadados).
+        """
+        return self._repo.listar_por_dono(self._dono_id)
 
     # ------------------------------------------------------------------
     # Escrita — Enxoval
@@ -124,7 +124,7 @@ class EnxovalService:
         primeiro_filho: bool,
         correcao_perfil: PerfilCodigo | None = None,
     ) -> Enxoval:
-        """Cria um novo enxoval após validar os dados e resolver o perfil de clima.
+        """Cria um novo enxoval vinculado ao usuário logado.
 
         Args:
             municipio_codigo: Código IBGE do município.
@@ -145,6 +145,7 @@ class EnxovalService:
         self._validar_data(data_prevista)
         perfil, corrigido = self._resolver_perfil(municipio_codigo, correcao_perfil)
         enxoval = Enxoval(
+            dono_id=self._dono_id,
             municipio_codigo=municipio_codigo,
             perfil_clima=perfil,
             perfil_corrigido=corrigido,
@@ -169,23 +170,17 @@ class EnxovalService:
         primeiro_filho: bool,
         correcao_perfil: PerfilCodigo | None = None,
     ) -> Enxoval:
-        """Substitui as respostas de um enxoval existente.
-
-        As quantidades marcadas são preservadas — a lista é recalculada
-        na próxima leitura com as novas respostas.
+        """Substitui as respostas verificando a posse do enxoval.
 
         Args:
             enxoval_id: UUID do enxoval a editar.
             (demais parâmetros: idênticos a ``criar``)
 
-        Returns:
-            Instância ORM de Enxoval após o flush.
-
         Raises:
-            EnxovalNaoEncontrado: Se o UUID não existir.
+            EnxovalNaoEncontrado: Se o UUID não existir ou pertencer a outro dono.
             DadoInvalido: Se a data, o município ou o estado estiverem inválidos.
         """
-        enxoval = self._repo.buscar_por_id(enxoval_id)
+        enxoval = self._repo.buscar_por_id_e_dono(enxoval_id, self._dono_id)
         self._validar_data(data_prevista)
         perfil, corrigido = self._resolver_perfil(municipio_codigo, correcao_perfil)
         enxoval.municipio_codigo = municipio_codigo
@@ -201,15 +196,12 @@ class EnxovalService:
         return enxoval
 
     def apagar(self, enxoval_id: uuid.UUID) -> None:
-        """Remove o enxoval e todas as suas linhas.
-
-        Args:
-            enxoval_id: UUID do enxoval a apagar.
+        """Remove o enxoval verificando a posse.
 
         Raises:
-            EnxovalNaoEncontrado: Se o UUID não existir.
+            EnxovalNaoEncontrado: Se o UUID não existir ou pertencer a outro dono.
         """
-        self._repo.apagar(self._repo.buscar_por_id(enxoval_id))
+        self._repo.apagar(self._repo.buscar_por_id_e_dono(enxoval_id, self._dono_id))
 
     # ------------------------------------------------------------------
     # Escrita — Linhas
@@ -223,25 +215,10 @@ class EnxovalService:
         ganhada: int,
         ja_tinha: int,
     ) -> None:
-        """Grava as quantidades de uma linha da planilha.
-
-        Aceita chave que não está na lista atual para preservar marcações
-        de famílias que mudaram de respostas (linhas órfãs).
-
-        Args:
-            enxoval_id: UUID do enxoval.
-            chave: Chave da linha (``<slug>:<tamanho>:<variante>``).
-            comprada: Unidades compradas.
-            ganhada: Unidades ganhas.
-            ja_tinha: Unidades que já existiam em casa.
-
-        Raises:
-            EnxovalNaoEncontrado: Se o UUID não existir.
-            DadoInvalido: Se alguma quantidade for negativa.
-        """
+        """Grava as quantidades de uma linha verificando a posse do enxoval."""
         if min(comprada, ganhada, ja_tinha) < 0:
             raise DadoInvalido("quantidade_negativa", "As quantidades não podem ser negativas.")
-        enxoval = self._repo.buscar_por_id(enxoval_id)
+        enxoval = self._repo.buscar_por_id_e_dono(enxoval_id, self._dono_id)
         linha = self._repo.buscar_ou_criar_linha(enxoval, chave)
         linha.qtd_comprada = comprada
         linha.qtd_ganhada = ganhada
@@ -249,18 +226,7 @@ class EnxovalService:
         self._repo.salvar_linha(linha)
 
     def completar_linha(self, enxoval_id: uuid.UUID, chave: str, origem: str) -> None:
-        """Completa o que falta em uma linha com a origem informada ("marcar tudo").
-
-        Args:
-            enxoval_id: UUID do enxoval.
-            chave: Chave da linha a completar.
-            origem: Como contabilizar o restante: ``'comprada'``, ``'ganhada'``
-                ou ``'ja_tinha'``.
-
-        Raises:
-            EnxovalNaoEncontrado: Se o UUID não existir.
-            DadoInvalido: Se a origem for inválida ou a chave não estiver na lista.
-        """
+        """Completa o que falta em uma linha verificando a posse do enxoval."""
         if origem not in ORIGENS_VALIDAS:
             raise DadoInvalido(
                 "origem_invalida",
@@ -270,7 +236,6 @@ class EnxovalService:
         calculada = next((l for l in completo.calculado.linhas if l.chave == chave), None)
         if calculada is None:
             raise DadoInvalido("linha_nao_encontrada", "Este item não está na sua lista atual.")
-
         linha = self._repo.buscar_ou_criar_linha(completo.enxoval, chave)
         ja_tem = linha.qtd_comprada + linha.qtd_ganhada + linha.qtd_ja_tinha
         falta = max(0, calculada.quantidade - ja_tem)
@@ -283,15 +248,7 @@ class EnxovalService:
     # ------------------------------------------------------------------
 
     def _validar_data(self, data_prevista: date) -> None:
-        """Verifica que a data prevista está na janela permitida.
-
-        Args:
-            data_prevista: Data a validar.
-
-        Raises:
-            DadoInvalido: Se a data estiver fora da janela de 1 ano atrás
-                a 10 meses à frente.
-        """
+        """Verifica que a data prevista está na janela permitida."""
         minimo = adicionar_meses(self._hoje, -12 * ANOS_ATRAS)
         maximo = adicionar_meses(self._hoje, MESES_A_FRENTE)
         if not minimo <= data_prevista <= maximo:
@@ -305,18 +262,7 @@ class EnxovalService:
         municipio_codigo: int,
         correcao: PerfilCodigo | None,
     ) -> tuple[PerfilCodigo, bool]:
-        """Resolve o perfil de clima a partir do município e da correção manual.
-
-        Args:
-            municipio_codigo: Código IBGE do município.
-            correcao: Perfil de clima corrigido manualmente (ou ``None``).
-
-        Returns:
-            Tupla ``(perfil_codigo, foi_corrigido)``.
-
-        Raises:
-            DadoInvalido: Se o município ou o estado não forem encontrados.
-        """
+        """Resolve o perfil de clima a partir do município e da correção manual."""
         municipio = self._sessao.get(Municipio, municipio_codigo)
         if municipio is None:
             raise DadoInvalido(

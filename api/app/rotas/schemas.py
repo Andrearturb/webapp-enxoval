@@ -237,3 +237,13 @@ class EnxovalCriado(BaseModel):
     """Resposta de criação de enxoval: apenas o UUID gerado."""
 
     id: uuid.UUID
+
+
+class EnxovalResumo(BaseModel):
+    """Resumo de um enxoval para a tela 'Meus enxovais' — sem linhas calculadas."""
+
+    id: uuid.UUID
+    municipio_nome: str
+    municipio_uf: str
+    data_prevista: date
+    percentual_progresso: int

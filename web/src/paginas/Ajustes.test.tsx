@@ -42,7 +42,7 @@ function renderAjustes() {
       <MemoryRouter initialEntries={['/enxoval/id-abc/ajustes']}>
         <Routes>
           <Route path="/enxoval/:id/ajustes" element={<Ajustes />} />
-          <Route path="/questionario/1" element={<p>Questionario</p>} />
+          <Route path="/meus-enxovais" element={<p>MeusEnxovais</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -61,13 +61,6 @@ describe('Ajustes', () => {
     renderAjustes()
     await waitFor(() => expect(screen.getByText('Curitiba - PR')).toBeInTheDocument())
     expect(screen.getByText(/apartamento/i)).toBeInTheDocument()
-  })
-
-  it('botão copiar link está presente', async () => {
-    vi.mocked(getEnxoval).mockResolvedValue(enxovalFixture)
-    renderAjustes()
-    await waitFor(() => screen.getByText('Curitiba - PR'))
-    expect(screen.getByRole('button', { name: /copiar link/i })).toBeInTheDocument()
   })
 
   it('botão apagar dados está presente', async () => {
@@ -100,7 +93,7 @@ describe('Ajustes', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }))
 
     await waitFor(() => expect(apagarEnxoval).toHaveBeenCalledWith('id-abc'))
-    await waitFor(() => expect(screen.getByText('Questionario')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('MeusEnxovais')).toBeInTheDocument())
   })
 
   it('mostra erro da API ao falhar ao apagar', async () => {

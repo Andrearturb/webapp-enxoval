@@ -1,15 +1,15 @@
-"""Camada de apresentação: converte EnxovalCompleto em EnxovalSaida (Pydantic HTTP).
+"""Camada de apresentação: converte dados de domínio em schemas Pydantic HTTP.
 
 Responsabilidade única: transformar as dataclasses imutáveis do motor e os modelos
-ORM do banco no contrato de saída HTTP — sem lógica de negócio além do cálculo de
-``faltam``, que é uma derivação direta das quantidades marcadas.
-
-Separa essa transformação de ``rotas/schemas.py``, que deve conter apenas a
-definição dos contratos Pydantic (entrada e saída), sem conhecer EnxovalCompleto.
+ORM do banco nos contratos de saída HTTP — sem lógica de negócio além do cálculo de
+``faltam``, que é derivação direta das quantidades marcadas.
 """
+from app.db.catalogo import Municipio
+from app.db.familia import Enxoval
 from app.rotas.schemas import (
     AlertaSaida,
     CategoriaSaida,
+    EnxovalResumo,
     EnxovalSaida,
     FaseSaida,
     FichaSaida,
@@ -153,4 +153,24 @@ def montar_saida(completo: EnxovalCompleto) -> EnxovalSaida:
             faltam=completo.progresso.faltam,
             percentual=completo.progresso.percentual,
         ),
+    )
+
+
+def montar_resumo(enxoval: Enxoval, municipio: Municipio | None, percentual: int) -> EnxovalResumo:
+    """Converte um Enxoval ORM num resumo leve para a tela 'Meus enxovais'.
+
+    Args:
+        enxoval: Instância ORM do enxoval (sem linhas carregadas).
+        municipio: Instância ORM do município (pode ser None se removido).
+        percentual: Percentual de progresso pré-calculado (0-100).
+
+    Returns:
+        ``EnxovalResumo`` pronto para serialização HTTP.
+    """
+    return EnxovalResumo(
+        id=enxoval.id,
+        municipio_nome=municipio.nome if municipio else "—",
+        municipio_uf=municipio.uf if municipio else "—",
+        data_prevista=enxoval.data_prevista,
+        percentual_progresso=percentual,
     )

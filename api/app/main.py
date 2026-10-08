@@ -63,9 +63,11 @@ def criar_app(cfg: Configuracoes | None = None) -> FastAPI:
             erro.status_code,
             ("erro_http", "Erro na requisição HTTP."),
         )
+        conteudo = erro.detail if isinstance(erro.detail, dict) else {"erro": codigo, "mensagem": mensagem}
         return JSONResponse(
             status_code=erro.status_code,
-            content={"erro": codigo, "mensagem": mensagem},
+            content=conteudo,
+            headers=erro.headers,
         )
 
     @app.exception_handler(RequestValidationError)

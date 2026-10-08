@@ -1,7 +1,7 @@
-"""Rotas do ciclo de vida do enxoval: criar, ler, editar e apagar.
+"""Rotas do ciclo de vida do enxoval: listar, criar, ler, editar e apagar.
 
-Todas as operações delegam para ``EnxovalService``, que encapsula
-a lógica de negócio e o acesso ao banco.
+Todas as operações delegam para ``EnxovalService``, que encapsula a lógica
+de negócio, o controle de acesso por dono e o acesso ao banco.
 """
 import uuid
 
@@ -10,16 +10,18 @@ from sqlalchemy.orm import Session
 
 from app.acesso import verificar_acesso
 from app.config import obter_configuracoes
+from app.db.catalogo import Municipio
 from app.db.sessao import obter_sessao
 from app.dependencias import obter_servico
 from app.limite import LimitePorIp
 from app.rotas.schemas import (
     EnxovalCriado,
+    EnxovalResumo,
     EnxovalSaida,
     Erro,
     RespostasEntrada,
 )
-from app.servicos.apresentacao import montar_saida
+from app.servicos.apresentacao import montar_resumo, montar_saida
 from app.servicos.enxoval_service import EnxovalService
 
 MAXIMO_CRIACOES = obter_configuracoes().limite_criacao_maximo
@@ -32,6 +34,21 @@ router = APIRouter(
     responses={404: {"model": Erro}, 422: {"model": Erro}},
     dependencies=[Depends(verificar_acesso)],
 )
+
+
+@router.get("", response_model=list[EnxovalResumo])
+def listar(
+    sessao: Session = Depends(obter_sessao),
+    servico: EnxovalService = Depends(obter_servico),
+) -> list[EnxovalResumo]:
+    """Lista os enxovais do dono com o mesmo progresso exibido na planilha."""
+    enxovais = servico.listar()
+    resumos = []
+    for enxoval in enxovais:
+        municipio = sessao.get(Municipio, enxoval.municipio_codigo)
+        percentual = servico.ler(enxoval.id).progresso.percentual
+        resumos.append(montar_resumo(enxoval, municipio, percentual))
+    return resumos
 
 
 @router.post("", response_model=EnxovalCriado, status_code=status.HTTP_201_CREATED)

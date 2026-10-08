@@ -34,6 +34,9 @@ class Enxoval(Base):
     atualizado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    # Sub do token JWT Keycloak — identifica o proprietário do enxoval.
+    # Nullable para compatibilidade com instâncias existentes sem auth.
+    dono_id: Mapped[str | None] = mapped_column(String(255), index=True)
     municipio_codigo: Mapped[int] = mapped_column(ForeignKey("municipio.codigo_ibge"))
     perfil_clima: Mapped[PerfilCodigo] = mapped_column(coluna_enum(PerfilCodigo))
     perfil_corrigido: Mapped[bool] = mapped_column(default=False)

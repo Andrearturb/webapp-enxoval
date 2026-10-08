@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { usePlanilha } from '../hooks/usePlanilha'
 import { apagarEnxoval } from '../api/enxovais'
-import { ErroApi } from '../api/cliente'
+import { apiDownload, ErroApi } from '../api/cliente'
+import { keycloakHabilitado } from '../auth/keycloak'
+import { useAuth } from '../auth/AuthProvider'
 import { CabecalhoEnxoval } from './planilha/CabecalhoEnxoval'
 import { EstadoPagina } from './planilha/EstadoPagina'
 import { Button } from '../componentes/ui/button'
@@ -41,33 +43,35 @@ export default function Ajustes() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { data: enxoval, isLoading, isError, error } = usePlanilha(id)
+  const { sair, nomeUsuario } = useAuth()
 
   const [confirmandoApagar, setConfirmandoApagar] = useState(false)
-  const [linkCopiado, setLinkCopiado] = useState(false)
   const [erroApagar, setErroApagar] = useState<string | null>(null)
+  const [erroExportar, setErroExportar] = useState<string | null>(null)
+
+  async function exportar(evento: React.MouseEvent<HTMLAnchorElement>, formato: string) {
+    if (!keycloakHabilitado) return
+    evento.preventDefault()
+    setErroExportar(null)
+    try {
+      await apiDownload(`/enxovais/${id}/exportar.${formato}`, `enxoval-${id}.${formato}`)
+    } catch (erro) {
+      setErroExportar(erro instanceof ErroApi ? erro.message : 'Não foi possível exportar. Tente de novo.')
+    }
+  }
 
   const mutacaoApagar = useMutation({
     mutationFn: () => apagarEnxoval(id),
     onSuccess: () => {
       qc.removeQueries({ queryKey: ['enxoval', id] })
-      navigate('/questionario/1', { replace: true })
+      void qc.invalidateQueries({ queryKey: ['meus-enxovais'] })
+      navigate('/meus-enxovais', { replace: true })
     },
     onError: (e) => {
       setErroApagar(e instanceof ErroApi ? e.message : 'Não foi possível apagar. Tente de novo.')
       setConfirmandoApagar(false)
     },
   })
-
-  async function copiarLink() {
-    const url = `${window.location.origin}/enxoval/${id}/planilha`
-    try {
-      await navigator.clipboard.writeText(url)
-      setLinkCopiado(true)
-      setTimeout(() => setLinkCopiado(false), 2500)
-    } catch {
-      // fallback silencioso — clipboard pode ser bloqueado em alguns browsers
-    }
-  }
 
   if (isLoading || isError || !enxoval) {
     return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
@@ -120,6 +124,7 @@ export default function Ajustes() {
           <div className="flex flex-wrap gap-3">
             <a
               href={`/api/v1/enxovais/${id}/exportar.xlsx`}
+              onClick={(evento) => void exportar(evento, 'xlsx')}
               download
               className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
             >
@@ -127,6 +132,7 @@ export default function Ajustes() {
             </a>
             <a
               href={`/api/v1/enxovais/${id}/exportar.csv`}
+              onClick={(evento) => void exportar(evento, 'csv')}
               download
               className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
             >
@@ -134,24 +140,28 @@ export default function Ajustes() {
             </a>
             <a
               href={`/api/v1/enxovais/${id}/exportar.pdf`}
+              onClick={(evento) => void exportar(evento, 'pdf')}
               download
               className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
             >
               📑 Baixar PDF
             </a>
           </div>
+          {erroExportar && <p role="alert" className="mt-3 text-alerta-texto">{erroExportar}</p>}
         </section>
 
-        {/* Copiar link */}
-        <section className="rounded-2xl bg-superficie p-4 shadow-sm">
-          <h2 className="mb-1 font-semibold text-texto">Compartilhar</h2>
-          <p className="mb-3 text-sm text-texto-suave">
-            Copie o link para acessar esta planilha em outro aparelho ou compartilhar com alguém.
-          </p>
-          <Button type="button" onClick={copiarLink} variant="secundario">
-            {linkCopiado ? '✓ Link copiado!' : 'Copiar link'}
-          </Button>
-        </section>
+        {/* Conta */}
+        {nomeUsuario && (
+          <section className="rounded-2xl bg-superficie p-4 shadow-sm">
+            <h2 className="mb-1 font-semibold text-texto">Conta</h2>
+            <p className="mb-3 text-sm text-texto-suave">
+              Logado como <span className="font-medium text-texto">{nomeUsuario}</span>.
+            </p>
+            <Button type="button" variant="secundario" onClick={sair}>
+              Sair
+            </Button>
+          </section>
+        )}
 
         {/* Apagar dados */}
         <section className="rounded-2xl bg-superficie p-4 shadow-sm">

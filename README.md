@@ -18,6 +18,34 @@ docker compose up -d --build
 
 Portas 8010 ou 5180 em uso? Troque `API_PORT`/`WEB_PORT` no `.env`.
 
+## Login com Keycloak
+
+O provedor de identidade fica no repositório separado [keycloak-server](https://github.com/Andrearturb/keycloak-server).
+Suba esse projeto seguindo seu README e, no `.env` deste app, configure:
+
+```env
+KEYCLOAK_HABILITADO=true
+KEYCLOAK_URL=http://host.docker.internal:8080
+KEYCLOAK_PUBLIC_URL=http://localhost:8080
+KEYCLOAK_ISSUER=http://localhost:8080/realms/enxoval
+KEYCLOAK_REALM=enxoval
+KEYCLOAK_CLIENT_ID=webapp
+```
+
+`KEYCLOAK_URL` é o endereço usado pelo container da API para buscar as chaves;
+`KEYCLOAK_PUBLIC_URL` é o endereço acessível pelo navegador. `KEYCLOAK_ISSUER`
+deve corresponder ao issuer público do realm, mesmo quando a URL interna é diferente.
+Para outro realm, ajuste também o sufixo de `KEYCLOAK_ISSUER`.
+
+Rode `docker compose run --rm api alembic upgrade head` e recrie API/frontend com
+`docker compose up -d --build api web`. A página inicial passa a exibir os enxovais
+da conta autenticada. As exportações também exigem token.
+
+Enxovais criados antes da autenticação têm `dono_id` vazio e não aparecem nas contas
+até que sejam associados ao proprietário correto. Com `KEYCLOAK_HABILITADO=false`,
+o desenvolvimento local continua sem login. Em um build estático do frontend,
+forneça as variáveis `VITE_KEYCLOAK_*` durante `npm run build`.
+
 ## Banco e conteúdo
 
 ```bash

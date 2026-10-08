@@ -28,6 +28,46 @@ def test_criar_devolve_201_com_id_e_location(cliente, catalogo_no_banco):
     assert resposta.headers["Location"] == f"/api/v1/enxovais/{identificador}"
 
 
+def test_listagem_filtra_dono_e_progresso_igual_a_planilha(cliente, catalogo_no_banco):
+    from app.acesso import verificar_acesso
+    dono_original = cliente.app.dependency_overrides[verificar_acesso]
+
+    identificador = _criar(cliente)
+    cliente.app.dependency_overrides[verificar_acesso] = lambda: "outro-usuario"
+    outro = _criar(cliente)
+    assert [r["id"] for r in cliente.get("/api/v1/enxovais").json()] == [outro]
+    cliente.app.dependency_overrides[verificar_acesso] = dono_original
+    resposta = cliente.put(f"/api/v1/enxovais/{identificador}/linhas/body:P:frio",
+                          json={"comprada": 8, "ganhada": 0, "ja_tinha": 0})
+    assert resposta.status_code in (200, 204)
+    resumo = cliente.get("/api/v1/enxovais").json()
+    planilha = cliente.get(f"/api/v1/enxovais/{identificador}").json()
+    assert [r["id"] for r in resumo] == [identificador]
+    assert resumo[0]["percentual_progresso"] == planilha["progresso"]["percentual"]
+
+
+@pytest.mark.parametrize("operacao", ["ler", "editar", "apagar", "marcar", "completar", "exportar"])
+def test_outro_dono_nao_acessa_enxoval(cliente, catalogo_no_banco, operacao):
+    from app.acesso import verificar_acesso
+
+    identificador = _criar(cliente)
+    cliente.app.dependency_overrides[verificar_acesso] = lambda: "outro-usuario"
+    url = f"/api/v1/enxovais/{identificador}"
+    if operacao == "ler":
+        resposta = cliente.get(url)
+    elif operacao == "editar":
+        resposta = cliente.patch(url, json=CORPO)
+    elif operacao == "apagar":
+        resposta = cliente.delete(url)
+    elif operacao == "marcar":
+        resposta = cliente.put(url + "/linhas/body:P:frio", json={"comprada": 1, "ganhada": 0, "ja_tinha": 0})
+    elif operacao == "completar":
+        resposta = cliente.post(url + "/linhas/body:P:frio/completar", json={"origem": "comprada"})
+    else:
+        resposta = cliente.get(url + "/exportar.csv")
+    assert resposta.status_code == 404
+
+
 def test_ler_traz_a_lista_calculada_de_curitiba(cliente, catalogo_no_banco):
     identificador = _criar(cliente)
 

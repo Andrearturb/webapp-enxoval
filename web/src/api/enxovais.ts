@@ -12,6 +12,19 @@ export type Tamanho = components['schemas']['Tamanho']
 export type MomentoCompra = components['schemas']['MomentoCompra']
 export type FaseSaida = components['schemas']['FaseSaida']
 
+// EnxovalResumo não está nos tipos gerados (endpoint novo) — definido manualmente
+export interface EnxovalResumo {
+  id: string
+  municipio_nome: string
+  municipio_uf: string
+  data_prevista: string
+  percentual_progresso: number
+}
+
+export function listarEnxovais(): Promise<EnxovalResumo[]> {
+  return apiFetch<EnxovalResumo[]>('/enxovais')
+}
+
 export function criarEnxoval(dados: RespostasEntrada): Promise<EnxovalCriado> {
   return apiFetch<EnxovalCriado>('/enxovais', {
     method: 'POST',

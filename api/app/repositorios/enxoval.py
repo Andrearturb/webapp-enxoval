@@ -58,6 +58,46 @@ class EnxovalRepository:
             raise EnxovalNaoEncontrado()
         return enxoval
 
+    def buscar_por_id_e_dono(self, enxoval_id: uuid.UUID, dono_id: str | None) -> Enxoval:
+        """Busca um Enxoval pelo UUID verificando o proprietário.
+
+        Quando ``dono_id`` é ``None`` (modo dev sem autenticação), apenas
+        confirma que o enxoval existe — sem filtrar por proprietário.
+
+        Args:
+            enxoval_id: UUID do enxoval.
+            dono_id: ``sub`` do token JWT do usuário logado, ou ``None`` em dev.
+
+        Returns:
+            Instância ORM de Enxoval com ``linhas`` já carregadas.
+
+        Raises:
+            EnxovalNaoEncontrado: Se o UUID não existir.
+            EnxovalNaoEncontrado: Se o enxoval existir mas pertencer a outro dono
+                (retorna 404 propositalmente para não vazar existência do recurso).
+        """
+        enxoval = self.buscar_por_id(enxoval_id)
+        if dono_id is not None and enxoval.dono_id != dono_id:
+            # Retorna 404 (não 403) para não confirmar ao atacante que o recurso existe
+            raise EnxovalNaoEncontrado()
+        return enxoval
+
+    def listar_por_dono(self, dono_id: str | None) -> list[Enxoval]:
+        """Retorna todos os enxovais de um usuário, sem carregar as linhas.
+
+        Em modo dev (``dono_id=None``), retorna todos os enxovais do banco.
+
+        Args:
+            dono_id: ``sub`` do token JWT ou ``None`` em dev.
+
+        Returns:
+            Lista de ``Enxoval`` ordenada do mais recente para o mais antigo.
+        """
+        query = select(Enxoval).order_by(Enxoval.criado_em.desc())
+        if dono_id is not None:
+            query = query.where(Enxoval.dono_id == dono_id)
+        return list(self._sessao.scalars(query).all())
+
     # ------------------------------------------------------------------
     # Escrita — Enxoval
     # ------------------------------------------------------------------

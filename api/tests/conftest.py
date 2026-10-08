@@ -90,13 +90,22 @@ def catalogo_no_banco(sessao):
 
 
 HOJE_FIXO = date(2027, 2, 1)
+# dono_id fixo usado em todos os testes — simula o sub do token Keycloak
+DONO_FIXO = "usuario-teste-123"
 
 
 @pytest.fixture
 def cliente(sessao):
-    """TestClient com a sessão do teste e uma data de hoje fixa."""
+    """TestClient com a sessão do teste, data fixa e autenticação mockada.
+
+    Faz override de:
+    - ``obter_sessao``: usa a sessão do teste (com rollback automático)
+    - ``obter_hoje``: data fixa para resultados determinísticos
+    - ``verificar_acesso``: retorna DONO_FIXO sem chamar Keycloak
+    """
     from fastapi.testclient import TestClient
 
+    from app.acesso import verificar_acesso
     from app.config import Configuracoes
     from app.db.sessao import obter_sessao
     from app.dependencias import obter_hoje
@@ -107,6 +116,8 @@ def cliente(sessao):
     app = criar_app(Configuracoes(database_url=URL_TESTE))
     app.dependency_overrides[obter_sessao] = lambda: sessao
     app.dependency_overrides[obter_hoje] = lambda: HOJE_FIXO
+    # Substitui verificar_acesso para não precisar de Keycloak nos testes
+    app.dependency_overrides[verificar_acesso] = lambda: DONO_FIXO
     # O limite de criação é um singleton por processo; sem resetar aqui, os testes
     # se acumulariam no mesmo limite e um teste posterior receberia 429 por engano.
     rotas_enxovais.limite_de_criacao = LimitePorIp(
