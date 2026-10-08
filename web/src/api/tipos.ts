@@ -65,9 +65,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Listar
+         * @description Lista os enxovais do dono com o mesmo progresso exibido na planilha.
+         */
+        get: operations["listar_api_v1_enxovais_get"];
         put?: never;
-        /** Criar */
+        /**
+         * Criar
+         * @description Cria um enxoval a partir das respostas do questionário.
+         *
+         *     Aplica rate limiting por IP (20 criações/hora) para evitar abuso.
+         *     Retorna o UUID gerado no cabeçalho ``Location`` além do corpo.
+         */
         post: operations["criar_api_v1_enxovais_post"];
         delete?: never;
         options?: never;
@@ -82,19 +92,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Ler */
+        /**
+         * Ler
+         * @description Retorna o enxoval completo: linhas calculadas, roteiro, fichas e progresso.
+         */
         get: operations["ler_api_v1_enxovais__enxoval_id__get"];
         put?: never;
         post?: never;
-        /** Apagar */
+        /**
+         * Apagar
+         * @description Remove permanentemente o enxoval e todas as suas linhas.
+         */
         delete: operations["apagar_api_v1_enxovais__enxoval_id__delete"];
         options?: never;
         head?: never;
         /**
          * Editar
-         * @description Recebe as 6 respostas inteiras; não há edição parcial no MVP.
+         * @description Substitui todas as respostas do questionário. Marcações são preservadas.
          */
         patch: operations["editar_api_v1_enxovais__enxoval_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/enxovais/{enxoval_id}/prever": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prever
+         * @description Calcula uma prévia sem persistir respostas nem alterar marcações.
+         */
+        post: operations["prever_api_v1_enxovais__enxoval_id__prever_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/enxovais/{enxoval_id}/linhas/{chave}": {
@@ -107,7 +143,7 @@ export interface paths {
         get?: never;
         /**
          * Marcar
-         * @description Grava as quantidades da linha e devolve a lista e o progresso já atualizados.
+         * @description Grava as quantidades da linha e devolve a lista e o progresso atualizados.
          */
         put: operations["marcar_api_v1_enxovais__enxoval_id__linhas__chave__put"];
         post?: never;
@@ -126,8 +162,71 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Completar */
+        /**
+         * Completar
+         * @description Completa o que falta na linha com a origem informada e devolve o estado atualizado.
+         */
         post: operations["completar_api_v1_enxovais__enxoval_id__linhas__chave__completar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/enxovais/{enxoval_id}/exportar.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Csv
+         * @description Exporta a planilha em CSV com BOM UTF-8 para compatibilidade com Excel.
+         */
+        get: operations["exportar_csv_api_v1_enxovais__enxoval_id__exportar_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/enxovais/{enxoval_id}/exportar.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Xlsx
+         * @description Exporta a planilha em XLSX com abas Planilha e Roteiro.
+         */
+        get: operations["exportar_xlsx_api_v1_enxovais__enxoval_id__exportar_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/enxovais/{enxoval_id}/exportar.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exportar Pdf
+         * @description Exporta a planilha em PDF via WeasyPrint com template HTML.
+         */
+        get: operations["exportar_pdf_api_v1_enxovais__enxoval_id__exportar_pdf_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -138,7 +237,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** AlertaSaida */
+        /**
+         * AlertaSaida
+         * @description Alerta de segurança com a data a partir da qual passa a ser relevante.
+         */
         AlertaSaida: {
             /** Codigo */
             codigo: string;
@@ -160,7 +262,10 @@ export interface components {
             /** Itens */
             itens: string[];
         };
-        /** CategoriaSaida */
+        /**
+         * CategoriaSaida
+         * @description Categoria de itens do catálogo (ex.: Roupas, Higiene).
+         */
         CategoriaSaida: {
             /** Slug */
             slug: string;
@@ -169,12 +274,21 @@ export interface components {
             /** Ordem */
             ordem: number;
         };
-        /** CompletarEntrada */
+        /**
+         * CompletarEntrada
+         * @description Origem para completar o que falta em uma linha (marcar tudo).
+         */
         CompletarEntrada: {
-            /** Origem */
+            /**
+             * Origem
+             * @description Como contabilizar o restante: 'comprada', 'ganhada' ou 'ja_tinha'.
+             */
             origem: string;
         };
-        /** EnxovalCriado */
+        /**
+         * EnxovalCriado
+         * @description Resposta de criação de enxoval: apenas o UUID gerado.
+         */
         EnxovalCriado: {
             /**
              * Id
@@ -182,7 +296,32 @@ export interface components {
              */
             id: string;
         };
-        /** EnxovalSaida */
+        /**
+         * EnxovalResumo
+         * @description Resumo de um enxoval para a tela 'Meus enxovais' — sem linhas calculadas.
+         */
+        EnxovalResumo: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Municipio Nome */
+            municipio_nome: string;
+            /** Municipio Uf */
+            municipio_uf: string;
+            /**
+             * Data Prevista
+             * Format: date
+             */
+            data_prevista: string;
+            /** Percentual Progresso */
+            percentual_progresso: number;
+        };
+        /**
+         * EnxovalSaida
+         * @description Enxoval completo: respostas, lista calculada, roteiro, fichas e progresso.
+         */
         EnxovalSaida: {
             /**
              * Id
@@ -205,7 +344,14 @@ export interface components {
             resumo: components["schemas"]["ResumoSaida"];
             progresso: components["schemas"]["ProgressoSaida"];
         };
-        /** Erro */
+        /**
+         * Erro
+         * @description Resposta de erro padrão da API.
+         *
+         *     Attributes:
+         *         erro: Código de erro em snake_case (ex.: ``enxoval_nao_encontrado``).
+         *         mensagem: Mensagem legível em português para exibição na tela.
+         */
         Erro: {
             /** Erro */
             erro: string;
@@ -217,7 +363,10 @@ export interface components {
          * @enum {string}
          */
         Faixa: "economico" | "intermediario" | "investir";
-        /** FaseSaida */
+        /**
+         * FaseSaida
+         * @description Uma fase do roteiro de compras com datas calculadas a partir da data prevista.
+         */
         FaseSaida: {
             /** Codigo */
             codigo: string;
@@ -238,7 +387,10 @@ export interface components {
             /** Atual */
             atual: boolean;
         };
-        /** FichaSaida */
+        /**
+         * FichaSaida
+         * @description Ficha informativa de um item: o que é, como escolher, marcas e alertas.
+         */
         FichaSaida: {
             /** Slug */
             slug: string;
@@ -261,10 +413,19 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** LinhaForaSaida */
+        /**
+         * LinhaForaSaida
+         * @description Linha marcada pela família que não está mais na lista calculada atual.
+         */
         LinhaForaSaida: {
             /** Chave */
             chave: string;
+            /** Nome */
+            nome?: string | null;
+            /** Tamanho */
+            tamanho?: string | null;
+            /** Rotulo Variante */
+            rotulo_variante?: string | null;
             /** Comprada */
             comprada: number;
             /** Ganhada */
@@ -273,11 +434,9 @@ export interface components {
             ja_tinha: number;
         };
         /**
-         * MomentoCompra
-         * @enum {string}
+         * LinhaSaida
+         * @description Uma linha da planilha: item calculado pelo motor mesclado com as marcações da família.
          */
-        MomentoCompra: "atrasado" | "agora" | "proxima_fase" | "futuro";
-        /** LinhaSaida */
         LinhaSaida: {
             /** Chave */
             chave: string;
@@ -297,7 +456,6 @@ export interface components {
             prioridade: components["schemas"]["Prioridade"];
             /** Fase Codigo */
             fase_codigo: string;
-            momento_compra: components["schemas"]["MomentoCompra"];
             /** E Seguranca */
             e_seguranca: boolean;
             /** Comprada */
@@ -308,17 +466,36 @@ export interface components {
             ja_tinha: number;
             /** Faltam */
             faltam: number;
+            momento_compra: components["schemas"]["MomentoCompra"];
         };
-        /** MarcacaoEntrada */
+        /**
+         * MarcacaoEntrada
+         * @description Quantidades marcadas pela família para uma linha da planilha.
+         *
+         *     O limite de 9999 por campo evita que uma quantidade absurda cause overflow
+         *     no banco, devolvendo 422 ao invés de 500.
+         */
         MarcacaoEntrada: {
-            /** Comprada */
+            /**
+             * Comprada
+             * @description Unidades compradas pela família.
+             */
             comprada: number;
-            /** Ganhada */
+            /**
+             * Ganhada
+             * @description Unidades ganhas (chá de bebê, etc.).
+             */
             ganhada: number;
-            /** Ja Tinha */
+            /**
+             * Ja Tinha
+             * @description Unidades que já existiam em casa.
+             */
             ja_tinha: number;
         };
-        /** MarcasSaida */
+        /**
+         * MarcasSaida
+         * @description Marcas sugeridas para um item, já filtradas pelo orçamento da família.
+         */
         MarcasSaida: {
             /** Nomes */
             nomes: string[];
@@ -326,6 +503,11 @@ export interface components {
             /** Faixa Aproximada */
             faixa_aproximada: boolean;
         };
+        /**
+         * MomentoCompra
+         * @enum {string}
+         */
+        MomentoCompra: "atrasado" | "agora" | "proxima_fase" | "futuro";
         /**
          * Moradia
          * @enum {string}
@@ -341,7 +523,10 @@ export interface components {
             uf: string;
             perfil_sugerido: components["schemas"]["PerfilCodigo"];
         };
-        /** MunicipioSaida */
+        /**
+         * MunicipioSaida
+         * @description Dados do município do enxoval.
+         */
         MunicipioSaida: {
             /** Codigo Ibge */
             codigo_ibge: number;
@@ -355,7 +540,10 @@ export interface components {
          * @enum {string}
          */
         PerfilCodigo: "quente" | "moderado" | "frio";
-        /** PerfilSaida */
+        /**
+         * PerfilSaida
+         * @description Perfil de clima com suas características sazonais.
+         */
         PerfilSaida: {
             codigo: components["schemas"]["PerfilCodigo"];
             /** Nome */
@@ -372,7 +560,10 @@ export interface components {
          * @enum {string}
          */
         Prioridade: "essencial" | "util" | "pode_esperar";
-        /** ProgressoSaida */
+        /**
+         * ProgressoSaida
+         * @description Progresso de compras da família em relação ao total calculado.
+         */
         ProgressoSaida: {
             /** Total Unidades */
             total_unidades: number;
@@ -383,26 +574,48 @@ export interface components {
             /** Percentual */
             percentual: number;
         };
-        /** RespostasEntrada */
+        /**
+         * RespostasEntrada
+         * @description Respostas do questionário enviadas pelo cliente para criar ou editar um enxoval.
+         */
         RespostasEntrada: {
-            /** Municipio Codigo */
+            /**
+             * Municipio Codigo
+             * @description Código IBGE do município.
+             */
             municipio_codigo: number;
             /**
              * Data Prevista
              * Format: date
+             * @description Data prevista de nascimento (AAAA-MM-DD).
              */
             data_prevista: string;
-            /** Dias Entre Lavagens */
+            /**
+             * Dias Entre Lavagens
+             * @description Frequência de lavagem de roupas.
+             */
             dias_entre_lavagens: number;
+            /** @description Tipo de moradia da família. */
             moradia: components["schemas"]["Moradia"];
-            /** Tem Carro */
+            /**
+             * Tem Carro
+             * @description A família tem carro próprio.
+             */
             tem_carro: boolean;
+            /** @description Faixa de orçamento para compras. */
             orcamento: components["schemas"]["Faixa"];
-            /** Primeiro Filho */
+            /**
+             * Primeiro Filho
+             * @description É o primeiro filho da família.
+             */
             primeiro_filho: boolean;
+            /** @description Correção manual do perfil de clima (sobrescreve o padrão da cidade). */
             correcao_perfil?: components["schemas"]["PerfilCodigo"] | null;
         };
-        /** RespostasSaida */
+        /**
+         * RespostasSaida
+         * @description Respostas do questionário persistidas, enriquecidas com dados do município.
+         */
         RespostasSaida: {
             municipio: components["schemas"]["MunicipioSaida"];
             perfil_clima: components["schemas"]["PerfilCodigo"];
@@ -422,7 +635,10 @@ export interface components {
             /** Primeiro Filho */
             primeiro_filho: boolean;
         };
-        /** ResumoSaida */
+        /**
+         * ResumoSaida
+         * @description Resumo quantitativo da planilha.
+         */
         ResumoSaida: {
             /** Dias Sem Lavar */
             dias_sem_lavar: number;
@@ -532,6 +748,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_api_v1_enxovais_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnxovalResumo"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
                 };
             };
         };
@@ -700,6 +954,50 @@ export interface operations {
             };
         };
     };
+    prever_api_v1_enxovais__enxoval_id__prever_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enxoval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RespostasEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnxovalSaida"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+        };
+    };
     marcar_api_v1_enxovais__enxoval_id__linhas__chave__put: {
         parameters: {
             query?: never;
@@ -788,6 +1086,126 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Erro"];
+                };
+            };
+        };
+    };
+    exportar_csv_api_v1_enxovais__enxoval_id__exportar_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enxoval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_xlsx_api_v1_enxovais__enxoval_id__exportar_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enxoval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportar_pdf_api_v1_enxovais__enxoval_id__exportar_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                enxoval_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -46,7 +46,7 @@ def test_listagem_filtra_dono_e_progresso_igual_a_planilha(cliente, catalogo_no_
     assert resumo[0]["percentual_progresso"] == planilha["progresso"]["percentual"]
 
 
-@pytest.mark.parametrize("operacao", ["ler", "editar", "apagar", "marcar", "completar", "exportar"])
+@pytest.mark.parametrize("operacao", ["ler", "editar", "prever", "apagar", "marcar", "completar", "exportar"])
 def test_outro_dono_nao_acessa_enxoval(cliente, catalogo_no_banco, operacao):
     from app.acesso import verificar_acesso
 
@@ -57,6 +57,8 @@ def test_outro_dono_nao_acessa_enxoval(cliente, catalogo_no_banco, operacao):
         resposta = cliente.get(url)
     elif operacao == "editar":
         resposta = cliente.patch(url, json=CORPO)
+    elif operacao == "prever":
+        resposta = cliente.post(url + "/prever", json=CORPO)
     elif operacao == "apagar":
         resposta = cliente.delete(url)
     elif operacao == "marcar":
@@ -125,6 +127,43 @@ def test_editar_respostas_recalcula_a_lista(cliente, catalogo_no_banco):
     linhas = {l["chave"] for l in corpo["linhas"]}
     assert "body:P:calor" in linhas
     assert not [c for c in linhas if c.startswith("gorro")]
+
+
+def test_previa_nao_persiste_respostas_nem_marcacoes(cliente, catalogo_no_banco):
+    identificador = _criar(cliente)
+    url = f"/api/v1/enxovais/{identificador}"
+    cliente.put(url + "/linhas/gorro:P:", json={"comprada": 2, "ganhada": 3, "ja_tinha": 1})
+    original = cliente.get(url).json()
+    resposta = cliente.post(url + "/prever", json={**CORPO, "municipio_codigo": 2927408})
+    assert resposta.status_code == 200, resposta.text
+    assert resposta.json()["respostas"]["municipio"]["nome"] == "Salvador"
+    fora = next(l for l in resposta.json()["linhas_fora_da_lista"] if l["chave"] == "gorro:P:")
+    assert (fora["comprada"], fora["ganhada"], fora["ja_tinha"]) == (2, 3, 1)
+    assert fora["nome"] and fora["tamanho"] == "P"
+    assert cliente.get(url).json() == original
+
+
+@pytest.mark.parametrize("campo,valor", [("orcamento", "investir"), ("dias_entre_lavagens", 1), ("municipio_codigo", 2927408)])
+def test_edicao_e_reversao_preservam_todas_as_origens(cliente, catalogo_no_banco, campo, valor):
+    identificador = _criar(cliente)
+    url = f"/api/v1/enxovais/{identificador}"
+    marca = {"comprada": 20, "ganhada": 3, "ja_tinha": 2}
+    cliente.put(url + "/linhas/body:P:frio", json=marca)
+    cliente.put(url + "/linhas/gorro:P:", json=marca)
+    resposta = cliente.patch(url, json={**CORPO, campo: valor})
+    assert resposta.status_code == 200, resposta.text
+    corpo = resposta.json()
+    assert corpo["id"] == identificador
+    assert corpo["respostas"][campo if campo != "municipio_codigo" else "municipio"] == (valor if campo != "municipio_codigo" else {"codigo_ibge": valor, "nome": "Salvador", "uf": "BA"})
+    linhas = {l["chave"]: l for l in corpo["linhas"] + corpo["linhas_fora_da_lista"]}
+    for chave in ("body:P:frio", "gorro:P:"):
+        assert {origem: linhas[chave][origem] for origem in marca} == marca
+    assert corpo["progresso"]["percentual"] <= 100
+    restaurada = cliente.patch(url, json=CORPO).json()
+    linhas = {l["chave"]: l for l in restaurada["linhas"]}
+    for chave in ("body:P:frio", "gorro:P:"):
+        assert {origem: linhas[chave][origem] for origem in marca} == marca
+    assert restaurada["linhas_fora_da_lista"] == []
 
 
 def test_correcao_de_perfil_e_registrada(cliente, catalogo_no_banco):

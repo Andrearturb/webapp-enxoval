@@ -41,10 +41,13 @@ export function marcarLinha(
   chave: string,
   marcacao: MarcacaoEntrada,
 ): Promise<EnxovalSaida> {
-  return apiFetch<EnxovalSaida>(`/enxovais/${id}/linhas/${encodeURIComponent(chave)}`, {
-    method: 'PUT',
-    body: JSON.stringify(marcacao),
-  })
+  return apiFetch<EnxovalSaida>(
+    `/enxovais/${id}/linhas/${encodeURIComponent(chave)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(marcacao),
+    },
+  )
 }
 
 export function completarLinha(
@@ -61,9 +64,22 @@ export function completarLinha(
   )
 }
 
-export function editarEnxoval(id: string, dados: RespostasEntrada): Promise<EnxovalSaida> {
+export function editarEnxoval(
+  id: string,
+  dados: RespostasEntrada,
+): Promise<EnxovalSaida> {
   return apiFetch<EnxovalSaida>(`/enxovais/${id}`, {
     method: 'PATCH',
+    body: JSON.stringify(dados),
+  })
+}
+
+export function preverEnxoval(
+  id: string,
+  dados: RespostasEntrada,
+): Promise<EnxovalSaida> {
+  return apiFetch<EnxovalSaida>(`/enxovais/${id}/prever`, {
+    method: 'POST',
     body: JSON.stringify(dados),
   })
 }

@@ -114,6 +114,32 @@ def editar(
     return montar_saida(servico.ler(enxoval_id))
 
 
+@router.post("/{enxoval_id}/prever", response_model=EnxovalSaida)
+def prever(
+    enxoval_id: uuid.UUID,
+    entrada: RespostasEntrada,
+    sessao: Session = Depends(obter_sessao),
+    servico: EnxovalService = Depends(obter_servico),
+) -> EnxovalSaida:
+    """Calcula uma prévia sem persistir respostas nem alterar marcações."""
+    dados = entrada.para_servico()
+    with sessao.begin_nested() as transacao:
+        servico.editar(
+            enxoval_id=enxoval_id,
+            municipio_codigo=dados.municipio_codigo,
+            data_prevista=dados.data_prevista,
+            dias_entre_lavagens=dados.dias_entre_lavagens,
+            moradia=dados.moradia,
+            tem_carro=dados.tem_carro,
+            orcamento=dados.orcamento,
+            primeiro_filho=dados.primeiro_filho,
+            correcao_perfil=dados.correcao_perfil,
+        )
+        previa = montar_saida(servico.ler(enxoval_id))
+        transacao.rollback()
+    return previa
+
+
 @router.delete("/{enxoval_id}", status_code=status.HTTP_204_NO_CONTENT)
 def apagar(
     enxoval_id: uuid.UUID,

@@ -9,6 +9,7 @@ import { ResumoPlanilha } from './planilha/ResumoPlanilha'
 import { FiltrosPlanilha, type Filtro } from './planilha/FiltrosPlanilha'
 import { GrupoPlanilha } from './planilha/GrupoPlanilha'
 import { PainelFases } from './planilha/PainelFases'
+import { ItensForaDaLista } from './planilha/ItensForaDaLista'
 
 // Ordem de exibição dos grupos — atrasado sempre primeiro
 const ORDEM_MOMENTOS: MomentoCompra[] = [
@@ -130,6 +131,7 @@ export default function Planilha() {
             onCompletar={completar}
           />
         ))}
+        <ItensForaDaLista linhas={enxoval.linhas_fora_da_lista} />
       </main>
     </div>
   )

@@ -10,6 +10,7 @@ import { CabecalhoEnxoval } from './planilha/CabecalhoEnxoval'
 import { EstadoPagina } from './planilha/EstadoPagina'
 import { Button } from '../componentes/ui/button'
 import { Download, FileSpreadsheet, FileText } from 'lucide-react'
+import { EditarRespostas } from './ajustes/EditarRespostas'
 
 const ROTULOS_MORADIA: Record<string, string> = {
   apartamento: 'Apartamento',
@@ -49,6 +50,8 @@ export default function Ajustes() {
   const [confirmandoApagar, setConfirmandoApagar] = useState(false)
   const [erroApagar, setErroApagar] = useState<string | null>(null)
   const [erroExportar, setErroExportar] = useState<string | null>(null)
+  const [editando, setEditando] = useState(false)
+  const [salvou, setSalvou] = useState(false)
 
   async function exportar(
     evento: React.MouseEvent<HTMLAnchorElement>,
@@ -117,46 +120,74 @@ export default function Ajustes() {
           <h2 className="mb-3 font-semibold text-texto">
             Respostas do questionário
           </h2>
-          <div className="divide-y divide-principal-suave">
-            <RespostaItem
-              rotulo="Cidade"
-              valor={`${r.municipio.nome} - ${r.municipio.uf}`}
-            />
-            <RespostaItem rotulo="Data prevista" valor={dataFormatada} />
-            <RespostaItem
-              rotulo="Frequência de lavagem"
-              valor={
-                ROTULOS_LAVAGEM[r.dias_entre_lavagens] ??
-                `A cada ${r.dias_entre_lavagens} dias`
-              }
-            />
-            <RespostaItem
-              rotulo="Moradia"
-              valor={ROTULOS_MORADIA[r.moradia] ?? r.moradia}
-            />
-            <RespostaItem
-              rotulo="Tem carro"
-              valor={r.tem_carro ? 'Sim' : 'Não'}
-            />
-            <RespostaItem
-              rotulo="Orçamento"
-              valor={ROTULOS_ORCAMENTO[r.orcamento] ?? r.orcamento}
-            />
-            <RespostaItem
-              rotulo="Primeiro filho"
-              valor={r.primeiro_filho ? 'Sim' : 'Não'}
-            />
-          </div>
-          <p className="mt-3 text-xs text-texto-suave">
-            Para corrigir as respostas, crie um novo enxoval a partir da{' '}
-            <a
-              href="/questionario/1"
-              className="underline hover:text-principal"
+          {salvou && (
+            <p
+              role="status"
+              className="mb-4 rounded-xl bg-principal-suave p-3 text-sm text-principal"
             >
-              página inicial
-            </a>
-            .
-          </p>
+              Enxoval atualizado. Suas compras, presentes e itens que já tinha
+              foram preservados.
+            </p>
+          )}
+          {!editando && (
+            <div className="divide-y divide-principal-suave">
+              <RespostaItem
+                rotulo="Cidade"
+                valor={`${r.municipio.nome} - ${r.municipio.uf}`}
+              />
+              <RespostaItem rotulo="Data prevista" valor={dataFormatada} />
+              <RespostaItem
+                rotulo="Frequência de lavagem"
+                valor={
+                  ROTULOS_LAVAGEM[r.dias_entre_lavagens] ??
+                  `A cada ${r.dias_entre_lavagens} dias`
+                }
+              />
+              <RespostaItem
+                rotulo="Moradia"
+                valor={ROTULOS_MORADIA[r.moradia] ?? r.moradia}
+              />
+              <RespostaItem
+                rotulo="Tem carro"
+                valor={r.tem_carro ? 'Sim' : 'Não'}
+              />
+              <RespostaItem
+                rotulo="Orçamento"
+                valor={ROTULOS_ORCAMENTO[r.orcamento] ?? r.orcamento}
+              />
+              <RespostaItem
+                rotulo="Primeiro filho"
+                valor={r.primeiro_filho ? 'Sim' : 'Não'}
+              />
+            </div>
+          )}
+          {editando ? (
+            <EditarRespostas
+              key={id}
+              enxoval={enxoval}
+              onFechar={(atualizou) => {
+                setEditando(false)
+                setSalvou(atualizou)
+              }}
+            />
+          ) : (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-texto-suave">
+                Você pode mudar suas respostas e adaptar este enxoval sem perder
+                os itens já registrados.
+              </p>
+              <Button
+                type="button"
+                variant="secundario"
+                onClick={() => {
+                  setEditando(true)
+                  setSalvou(false)
+                }}
+              >
+                Editar respostas
+              </Button>
+            </div>
+          )}
         </section>
 
         {/* Exportar */}

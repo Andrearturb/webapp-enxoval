@@ -146,6 +146,9 @@ class LinhaForaSaida(BaseModel):
     """Linha marcada pela família que não está mais na lista calculada atual."""
 
     chave: str
+    nome: str | None = None
+    tamanho: str | None = None
+    rotulo_variante: str | None = None
     comprada: int
     ganhada: int
     ja_tinha: int

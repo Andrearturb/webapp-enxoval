@@ -5,7 +5,7 @@ ORM do banco nos contratos de saída HTTP — sem lógica de negócio além do c
 ``faltam``, que é derivação direta das quantidades marcadas.
 """
 from app.db.catalogo import Municipio
-from app.db.familia import Enxoval
+from app.db.familia import Enxoval, EnxovalLinha
 from app.rotas.schemas import (
     AlertaSaida,
     CategoriaSaida,
@@ -40,6 +40,24 @@ def montar_saida(completo: EnxovalCompleto) -> EnxovalSaida:
     enxoval = completo.enxoval
     calculado = completo.calculado
     marcadas = completo.marcadas
+
+    itens_por_slug = {item.slug: item for item in completo.catalogo.itens}
+
+    def _fora_da_lista(linha: EnxovalLinha) -> LinhaForaSaida:
+        slug, tamanho, variante = (linha.chave.split(":") + ["", ""])[:3]
+        item = itens_por_slug.get(slug)
+        rotulo = None
+        if item and variante in ("frio", "calor"):
+            rotulo = item.variante_frio if variante == "frio" else item.variante_calor
+        return LinhaForaSaida(
+            chave=linha.chave,
+            nome=item.nome if item else slug.replace("-", " "),
+            tamanho=tamanho or None,
+            rotulo_variante=rotulo,
+            comprada=linha.qtd_comprada,
+            ganhada=linha.qtd_ganhada,
+            ja_tinha=linha.qtd_ja_tinha,
+        )
 
     def _quantidades(chave: str) -> tuple[int, int, int]:
         """Retorna (comprada, ganhada, ja_tinha) para uma chave, ou (0, 0, 0) se ausente."""
@@ -92,15 +110,7 @@ def montar_saida(completo: EnxovalCompleto) -> EnxovalSaida:
             for c in completo.catalogo.categorias
         ],
         linhas=linhas,
-        linhas_fora_da_lista=[
-            LinhaForaSaida(
-                chave=l.chave,
-                comprada=l.qtd_comprada,
-                ganhada=l.qtd_ganhada,
-                ja_tinha=l.qtd_ja_tinha,
-            )
-            for l in completo.fora_da_lista
-        ],
+        linhas_fora_da_lista=[_fora_da_lista(l) for l in completo.fora_da_lista],
         fichas=[
             FichaSaida(
                 slug=f.slug,
