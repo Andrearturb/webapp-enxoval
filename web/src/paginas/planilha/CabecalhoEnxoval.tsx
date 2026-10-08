@@ -8,6 +8,7 @@ import {
 import { Link, useParams } from 'react-router-dom'
 import type { EnxovalSaida } from '../../api/enxovais'
 import { Marca } from '../../componentes/Marca'
+import { MinhaContaLink } from '../../componentes/MinhaContaLink'
 
 interface Props {
   enxoval: EnxovalSaida
@@ -30,14 +31,17 @@ export function CabecalhoEnxoval({ enxoval, abaAtiva }: Props) {
   return (
     <header className="border-b border-borda bg-superficie">
       <div className="mx-auto max-w-5xl px-4 pt-4 sm:px-6">
-        <div className="flex items-center justify-between gap-3 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
           <Marca destino="/meus-enxovais" />
-          <Link
-            to="/meus-enxovais"
-            className="inline-flex min-h-11 items-center rounded-xl border border-borda px-3 text-xs font-medium text-principal sm:text-sm"
-          >
-            Meus enxovais
-          </Link>
+          <div className="flex items-center gap-2">
+            <MinhaContaLink />
+            <Link
+              to="/meus-enxovais"
+              className="inline-flex min-h-11 items-center rounded-xl border border-borda px-3 text-xs font-medium text-principal sm:text-sm"
+            >
+              Meus enxovais
+            </Link>
+          </div>
         </div>
         <p className="pb-3 text-xs text-texto-suave sm:text-sm">
           {municipio.nome} - {municipio.uf} · Previsão: {dataFormatada}

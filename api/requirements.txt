@@ -14,3 +14,4 @@ jinja2>=3.1,<4
 python-jose[cryptography]>=3.3,<4
 # HTTP client para buscar JWKS do Keycloak
 httpx>=0.27,<1
+pillow>=11.3,<13

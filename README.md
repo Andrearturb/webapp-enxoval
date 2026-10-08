@@ -52,6 +52,22 @@ para criar sua conta de família (a conta administrativa do Keycloak é separada
 Após o cadastro/login, a aplicação abre **Meus enxovais**. **Sair** encerra a sessão
 e retorna ao login. Uma sessão já autenticada pode entrar diretamente pelo SSO.
 
+O cadastro agora exige confirmação do e-mail antes de liberar a aplicação.
+No desenvolvimento, os e-mails são capturados pela caixa local do projeto
+Keycloak em http://localhost:8026. Abra a mensagem e clique no link de confirmação.
+Essa caixa não entrega mensagens para endereços reais; em produção, configure
+um SMTP de entrega no Keycloak. Contas existentes sem e-mail verificado também
+precisam confirmar seu endereço. A API rejeita tokens não verificados, inclusive
+tokens emitidos antes dessa configuração.
+
+Em **Minha conta** (`/minha-conta`), a pessoa pode enviar/remover foto, consultar
+nome e e-mail, editar dados pessoais, alterar senha e sair. A edição de nome e
+senha abre o fluxo do Keycloak e retorna ao perfil. Fotos são privadas, vinculadas
+ao `sub` da conta e armazenadas no PostgreSQL (`perfil_usuario`); arquivos JPG,
+PNG e WebP de até 2 MB são normalizados para JPEG de até 512 px, sem metadados.
+Execute `docker compose exec api alembic upgrade head` antes de usar o perfil
+em um banco existente. Faça backup do banco para preservar as fotos.
+
 Enxovais criados antes da autenticação têm `dono_id` vazio e não aparecem nas contas
 até que sejam associados ao proprietário correto. Com `KEYCLOAK_HABILITADO=false`,
 o desenvolvimento local continua sem login. Em um build estático do frontend,

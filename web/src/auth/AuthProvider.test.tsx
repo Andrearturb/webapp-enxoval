@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('keycloak-js', () => ({
   default: class {
     token = 'token'
-    tokenParsed = { preferred_username: 'familia' }
+    tokenParsed = { preferred_username: 'familia', email_verified: true }
+    login = vi.fn().mockResolvedValue(undefined)
     init = vi.fn().mockResolvedValue(true)
     updateToken = vi.fn().mockResolvedValue(false)
     logout = vi.fn()
@@ -17,13 +18,32 @@ describe('AuthProvider', () => {
     vi.stubEnv('VITE_KEYCLOAK_HABILITADO', 'true')
   })
 
+  it('impede acesso à aplicação enquanto o e-mail não foi verificado', async () => {
+    vi.resetModules()
+    const { AuthProvider: Provider } = await import('./AuthProvider')
+    const { keycloak: adapter } = await import('./keycloak')
+    adapter.tokenParsed = { preferred_username: 'familia', email_verified: false }
+    render(<Provider><p>Conteúdo protegido</p></Provider>)
+    await waitFor(() => expect(adapter.login).toHaveBeenCalledWith({ action: 'VERIFY_EMAIL', redirectUri: window.location.href }))
+    expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
+    vi.unstubAllEnvs()
+  })
+
   it('inicializa uma única vez sob StrictMode e aguarda o login', async () => {
     // A flag é lida na importação; recarregamos os módulos com o ambiente de auth.
     vi.resetModules()
     const { AuthProvider: Provider } = await import('./AuthProvider')
     const { keycloak: adapter } = await import('./keycloak')
-    render(<StrictMode><Provider><p>Conteúdo protegido</p></Provider></StrictMode>)
-    await waitFor(() => expect(screen.getByText('Conteúdo protegido')).toBeInTheDocument())
+    render(
+      <StrictMode>
+        <Provider>
+          <p>Conteúdo protegido</p>
+        </Provider>
+      </StrictMode>,
+    )
+    await waitFor(() =>
+      expect(screen.getByText('Conteúdo protegido')).toBeInTheDocument(),
+    )
     expect(adapter.init).toHaveBeenCalledOnce()
     vi.unstubAllEnvs()
   })
@@ -33,8 +53,14 @@ describe('AuthProvider', () => {
     const { AuthProvider: Provider } = await import('./AuthProvider')
     const { keycloak: adapter } = await import('./keycloak')
     vi.mocked(adapter.init).mockRejectedValue(new Error('indisponível'))
-    render(<Provider><p>Conteúdo protegido</p></Provider>)
-    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível autenticar')
+    render(
+      <Provider>
+        <p>Conteúdo protegido</p>
+      </Provider>,
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Não foi possível autenticar',
+    )
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
     vi.unstubAllEnvs()
   })
@@ -47,9 +73,15 @@ describe('AuthProvider', () => {
       const { sair } = useAuth()
       return <button onClick={sair}>Sair</button>
     }
-    render(<Provider><Conta /></Provider>)
+    render(
+      <Provider>
+        <Conta />
+      </Provider>,
+    )
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }))
-    expect(adapter.logout).toHaveBeenCalledWith({ redirectUri: `${window.location.origin}/` })
+    expect(adapter.logout).toHaveBeenCalledWith({
+      redirectUri: `${window.location.origin}/`,
+    })
     vi.unstubAllEnvs()
   })
 })

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { usePlanilha } from '../hooks/usePlanilha'
 import { apagarEnxoval } from '../api/enxovais'
@@ -240,6 +240,12 @@ export default function Ajustes() {
             <Button type="button" variant="secundario" onClick={sair}>
               Sair
             </Button>
+            <Link
+              to="/minha-conta"
+              className="ml-3 inline-flex min-h-11 items-center text-sm text-principal underline"
+            >
+              Minha conta
+            </Link>
           </section>
         )}
 

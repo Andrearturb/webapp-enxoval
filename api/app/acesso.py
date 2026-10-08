@@ -141,6 +141,11 @@ def verificar_acesso(
                 or payload.get("azp") != cfg.keycloak_client_id
                 or payload.get("typ") != "Bearer"):
             raise JWTError("Token sem proprietário ou emitido para outro client")
+        if payload.get("email_verified") is not True:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={"erro": "email_nao_verificado", "mensagem": "Confirme seu e-mail para acessar sua conta."},
+            )
         return sub
     except JWTError as erro:
         logger.warning("Token JWT inválido: %s", erro)

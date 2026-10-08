@@ -8,7 +8,13 @@
  *   para a tela de login do Keycloak se o usuário não estiver autenticado.
  *   Refresca o token automaticamente a cada 4 minutos (token expira em 5).
  */
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
 import { inicializarKeycloak, keycloak, keycloakHabilitado } from './keycloak'
 
 interface AuthContextValue {
@@ -49,18 +55,39 @@ export function AuthProvider({ children }: Props) {
       .then((autenticado) => {
         if (!ativo) return
         if (autenticado) {
+          if (keycloak.tokenParsed?.['email_verified'] !== true) {
+            void keycloak
+              .login({
+                action: 'VERIFY_EMAIL',
+                redirectUri: window.location.href,
+              })
+              .catch(() => {
+                if (ativo) setErro(true)
+              })
+            return
+          }
           setToken(keycloak.token)
-          setNomeUsuario(keycloak.tokenParsed?.['preferred_username'] ?? keycloak.tokenParsed?.['email'])
+          setNomeUsuario(
+            keycloak.tokenParsed?.['name'] ??
+              keycloak.tokenParsed?.['preferred_username'] ??
+              keycloak.tokenParsed?.['email'],
+          )
           setPronto(true)
 
           // Refresca o token 1 minuto antes de expirar (token dura 5 min)
-          intervalo = setInterval(() => {
-            keycloak.updateToken(60).then((renovado) => {
-              if (ativo && renovado) setToken(keycloak.token)
-            }).catch(() => {
-              if (ativo) setErro(true)
-            })
-          }, 4 * 60 * 1000)
+          intervalo = setInterval(
+            () => {
+              keycloak
+                .updateToken(60)
+                .then((renovado) => {
+                  if (ativo && renovado) setToken(keycloak.token)
+                })
+                .catch(() => {
+                  if (ativo) setErro(true)
+                })
+            },
+            4 * 60 * 1000,
+          )
         } else {
           setErro(true)
         }
@@ -84,7 +111,9 @@ export function AuthProvider({ children }: Props) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-fundo">
         <p role="alert">Não foi possível autenticar. Tente entrar novamente.</p>
-        <button type="button" onClick={() => window.location.reload()}>Tentar novamente</button>
+        <button type="button" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </button>
       </div>
     )
   }

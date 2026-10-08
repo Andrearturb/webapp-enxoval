@@ -233,6 +233,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ler */
+        get: operations["ler_api_v1_perfil_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/perfil/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Salvar Foto */
+        put: operations["salvar_foto_api_v1_perfil_foto_put"];
+        post?: never;
+        /** Remover Foto */
+        delete: operations["remover_foto_api_v1_perfil_foto_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -541,21 +576,6 @@ export interface components {
          */
         PerfilCodigo: "quente" | "moderado" | "frio";
         /**
-         * PerfilSaida
-         * @description Perfil de clima com suas características sazonais.
-         */
-        PerfilSaida: {
-            codigo: components["schemas"]["PerfilCodigo"];
-            /** Nome */
-            nome: string;
-            /** Descricao */
-            descricao: string;
-            /** Meses Frios */
-            meses_frios: number[];
-            /** Meses Frescos */
-            meses_frescos: number[];
-        };
-        /**
          * Prioridade
          * @enum {string}
          */
@@ -672,6 +692,26 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** PerfilSaida */
+        app__rotas__perfil__PerfilSaida: {
+            /** Foto */
+            foto?: string | null;
+        };
+        /**
+         * PerfilSaida
+         * @description Perfil de clima com suas características sazonais.
+         */
+        app__rotas__schemas__PerfilSaida: {
+            codigo: components["schemas"]["PerfilCodigo"];
+            /** Nome */
+            nome: string;
+            /** Descricao */
+            descricao: string;
+            /** Meses Frios */
+            meses_frios: number[];
+            /** Meses Frescos */
+            meses_frescos: number[];
+        };
     };
     responses: never;
     parameters: never;
@@ -716,7 +756,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PerfilSaida"][];
+                    "application/json": components["schemas"]["app__rotas__schemas__PerfilSaida"][];
                 };
             };
         };
@@ -1207,6 +1247,64 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    ler_api_v1_perfil_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["app__rotas__perfil__PerfilSaida"];
+                };
+            };
+        };
+    };
+    salvar_foto_api_v1_perfil_foto_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["app__rotas__perfil__PerfilSaida"];
+                };
+            };
+        };
+    };
+    remover_foto_api_v1_perfil_foto_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

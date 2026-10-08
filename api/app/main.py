@@ -31,11 +31,13 @@ def criar_app(cfg: Configuracoes | None = None) -> FastAPI:
     from app.rotas import enxovais as rotas_enxovais
     from app.rotas import exportar as rotas_exportar
     from app.rotas import linhas as rotas_linhas
+    from app.rotas import perfil as rotas_perfil
 
     api.include_router(rotas_catalogo.router)
     api.include_router(rotas_enxovais.router)
     api.include_router(rotas_linhas.router)
     api.include_router(rotas_exportar.router)
+    api.include_router(rotas_perfil.router)
 
     app.include_router(api)
     if cfg.admin_habilitado:
@@ -113,9 +115,10 @@ def criar_app(cfg: Configuracoes | None = None) -> FastAPI:
     @app.middleware("http")
     async def _cabecalhos_de_privacidade(request: Request, proximo):
         resposta = await proximo(request)
-        if request.url.path.startswith("/api/v1/enxovais"):
+        if request.url.path.startswith(("/api/v1/enxovais", "/api/v1/perfil")):
             resposta.headers["Referrer-Policy"] = "no-referrer"
             resposta.headers["X-Robots-Tag"] = "noindex"
+            resposta.headers["Cache-Control"] = "no-store"
         return resposta
 
     return app

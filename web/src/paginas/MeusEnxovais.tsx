@@ -17,6 +17,7 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import { IlustracaoEnxoval } from '../componentes/IlustracaoEnxoval'
+import { MinhaContaLink } from '../componentes/MinhaContaLink'
 
 function formatarData(dataStr: string): string {
   return new Date(dataStr + 'T12:00:00').toLocaleDateString('pt-BR', {
@@ -104,11 +105,12 @@ export default function MeusEnxovais() {
     <div className="min-h-screen bg-fundo">
       {/* Cabeçalho simples */}
       <header className="border-b border-borda bg-superficie">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
           <Marca destino="/meus-enxovais" />
           {nomeUsuario && (
             <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-texto-suave sm:inline">
+              <MinhaContaLink />
+              <span className="hidden max-w-48 truncate text-sm text-texto-suave sm:inline">
                 {nomeUsuario}
               </span>
               <button

@@ -108,6 +108,9 @@ def chave_rsa():
     ({"sub": None}, False),
     ({"exp": 1}, False),
     ({"exp": None}, False),
+    ({"email_verified": False}, False),
+    ({"email_verified": None}, False),
+    ({"email_verified": "true"}, False),
 ])
 def test_valida_assinatura_e_claims_do_token(chave_rsa, alteracao, valido):
     import time
@@ -117,7 +120,8 @@ def test_valida_assinatura_e_claims_do_token(chave_rsa, alteracao, valido):
 
     privada, jwks = chave_rsa
     payload = {"sub": "dono-123", "iss": "http://keycloak:8080/realms/enxoval",
-               "azp": "webapp", "typ": "Bearer", "exp": int(time.time()) + 300, **alteracao}
+               "azp": "webapp", "typ": "Bearer", "email_verified": True,
+               "exp": int(time.time()) + 300, **alteracao}
     payload = {k: v for k, v in payload.items() if v is not None}
     token = jwt.encode(payload, privada, algorithm="RS256", headers={"kid": "teste"})
     credenciais = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
@@ -127,7 +131,7 @@ def test_valida_assinatura_e_claims_do_token(chave_rsa, alteracao, valido):
         else:
             with pytest.raises(HTTPException) as erro:
                 verificar_acesso(credenciais, _cfg_keycloak_habilitado())
-            assert erro.value.status_code == 401
+            assert erro.value.status_code == (403 if "email_verified" in alteracao else 401)
 
 
 def test_jwks_com_erro_http_retorna_503():
