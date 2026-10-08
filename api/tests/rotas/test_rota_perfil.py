@@ -28,7 +28,7 @@ def test_avatar_isolado_por_usuario(cliente):
     assert cliente.get("/api/v1/perfil").json()["avatar"] == "ursinho"
 
 
-@pytest.mark.parametrize("avatar", ["desconhecido", "../../foto", "https://example.com/imagem.png", "Ursinho", None])
+@pytest.mark.parametrize("avatar", ["desconhecido", "../../foto", "https://example.com/imagem.png", "Ursinho"])
 def test_avatar_invalido_nao_apaga_escolha(cliente, avatar):
     anterior = cliente.put("/api/v1/perfil/avatar", json={"avatar": "nuvem"}).json()
     assert cliente.put("/api/v1/perfil/avatar", json={"avatar": avatar}).status_code == 422
@@ -39,11 +39,21 @@ def test_perfil_nunca_expoe_foto_antiga(cliente, sessao):
     dados = b"foto-antiga-preservada"
     sessao.add(PerfilUsuario(dono_id=DONO_FIXO, foto=dados))
     sessao.commit()
-    assert cliente.get("/api/v1/perfil").json() == {"avatar": "ursinho"}
+    assert cliente.get("/api/v1/perfil").json() == {"avatar": None}
     assert cliente.put("/api/v1/perfil/avatar", json={"avatar": "invalido"}).status_code == 422
     assert sessao.get(PerfilUsuario, DONO_FIXO).foto == dados
     assert cliente.put("/api/v1/perfil/avatar", json={"avatar": "coelhinho"}).json() == {"avatar": "coelhinho"}
     assert sessao.get(PerfilUsuario, DONO_FIXO).foto is None
+
+
+def test_iniciais_sao_escolha_persistida_sem_expor_fotos(cliente):
+    cliente.put("/api/v1/perfil/avatar", json={"avatar": "lua"})
+    resposta = cliente.put("/api/v1/perfil/avatar", json={"avatar": None})
+    assert resposta.status_code == 200
+    assert resposta.json() == {"avatar": None}
+    assert cliente.get("/api/v1/perfil").json() == {"avatar": None}
+    assert cliente.put("/api/v1/perfil/avatar", json={}).status_code == 422
+    assert cliente.get("/api/v1/perfil").json() == {"avatar": None}
 
 
 def test_upload_de_foto_foi_retirado(cliente):

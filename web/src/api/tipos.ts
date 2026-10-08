@@ -298,11 +298,8 @@ export interface components {
         };
         /** AvatarEntrada */
         AvatarEntrada: {
-            /**
-             * Avatar
-             * @enum {string}
-             */
-            avatar: "ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua";
+            /** Avatar */
+            avatar: ("ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua") | null;
         };
         /**
          * CategoriaSaida
@@ -704,9 +701,8 @@ export interface components {
             /**
              * Avatar
              * @default ursinho
-             * @enum {string}
              */
-            avatar: "ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua";
+            avatar: ("ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua") | null;
         };
         /**
          * PerfilSaida

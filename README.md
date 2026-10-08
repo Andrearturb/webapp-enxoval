@@ -61,13 +61,14 @@ precisam confirmar seu endereço. A API rejeita tokens não verificados, inclusi
 tokens emitidos antes dessa configuração.
 
 Em **Minha conta** (`/minha-conta`), a pessoa pode escolher um dos seis avatares
-(ursinho, coelhinho, elefantinho, patinho, nuvem e lua), consultar
+(ursinho, coelhinho, elefantinho, patinho, nuvem e lua) ou suas iniciais, consultar
 nome e e-mail, editar dados pessoais, alterar senha e sair. A edição de nome e
 senha abre o fluxo do Keycloak e retorna ao perfil. A escolha é vinculada ao `sub`
 da conta e armazenada no PostgreSQL (`perfil_usuario`). Clicar no avatar atual
-abre um modal com as seis opções; escolher uma salva e fecha o modal. Contas sem
-escolha usam o ursinho. Fotos e iniciais não são exibidas. A API aceita somente os
-seis códigos do catálogo em `PUT /api/v1/perfil/avatar`; o envio de arquivos foi
+abre um modal com os seis avatares e **Usar minhas iniciais**; escolher uma opção
+salva e fecha o modal. Contas sem escolha usam o ursinho. Fotos não são exibidas.
+A API aceita os seis códigos ou `avatar: null` para iniciais em
+`PUT /api/v1/perfil/avatar`; o envio de arquivos foi
 retirado. As ilustrações são arquivos WebP locais em `web/public/avatares`.
 O perfil retorna apenas `avatar`; não existe operação para remover a escolha.
 A coluna legada `foto` não é exposta nem usada para a imagem do perfil.

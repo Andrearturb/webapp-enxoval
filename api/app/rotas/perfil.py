@@ -13,11 +13,11 @@ AvatarCodigo = Literal["ursinho", "coelhinho", "elefantinho", "patinho", "nuvem"
 
 
 class PerfilSaida(BaseModel):
-    avatar: AvatarCodigo = "ursinho"
+    avatar: AvatarCodigo | None = "ursinho"
 
 
 class AvatarEntrada(BaseModel):
-    avatar: AvatarCodigo
+    avatar: AvatarCodigo | None
 
 
 def _dono(dono_id: str | None) -> str:
@@ -27,7 +27,7 @@ def _dono(dono_id: str | None) -> str:
 
 
 def _saida(perfil: PerfilUsuario | None) -> PerfilSaida:
-    return PerfilSaida(avatar=perfil.avatar if perfil and perfil.avatar else "ursinho")
+    return PerfilSaida(avatar=perfil.avatar if perfil else "ursinho")
 
 
 @router.get("", response_model=PerfilSaida)

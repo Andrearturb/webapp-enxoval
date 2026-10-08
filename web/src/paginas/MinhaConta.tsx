@@ -67,7 +67,7 @@ export default function MinhaConta() {
     [p?.firstName, p?.lastName].filter(Boolean).join(' ') ||
     nomeUsuario ||
     'Minha conta'
-  const avatarAtual = perfil.data?.avatar ?? 'ursinho'
+  const avatarAtual = perfil.data ? perfil.data.avatar : 'ursinho'
 
   return (
     <div className="min-h-screen bg-fundo">
@@ -133,7 +133,7 @@ export default function MinhaConta() {
                   }}
                   className="relative shrink-0 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-principal disabled:opacity-50"
                 >
-                  <AvatarUsuario avatar={avatarAtual} grande />
+                  <AvatarUsuario avatar={avatarAtual} nome={nome} grande />
                   <span className="absolute bottom-0 right-0 flex size-7 items-center justify-center rounded-full border-2 border-superficie bg-principal text-white">
                     <Pencil size={13} aria-hidden="true" />
                   </span>
@@ -157,6 +157,7 @@ export default function MinhaConta() {
             <ModalAvatar
               aberto={modalAberto}
               atual={avatarAtual}
+              nome={nome}
               salvando={avatar.isPending}
               erro={erro}
               onFechar={() => setModalAberto(false)}

@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { Check, X } from 'lucide-react'
 import { AVATARES, imagemAvatar, type AvatarCodigo } from './avatares'
+import { AvatarUsuario } from './MinhaContaLink'
 
 interface Props {
   aberto: boolean
-  atual: AvatarCodigo
+  atual: AvatarCodigo | null
+  nome: string
   salvando: boolean
   erro: string | null
-  onEscolher: (avatar: AvatarCodigo) => void
+  onEscolher: (avatar: AvatarCodigo | null) => void
   onFechar: () => void
 }
 
-export function ModalAvatar({ aberto, atual, salvando, erro, onEscolher, onFechar }: Props) {
+export function ModalAvatar({ aberto, atual, nome, salvando, erro, onEscolher, onFechar }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function ModalAvatar({ aberto, atual, salvando, erro, onEscolher, onFecha
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 id="titulo-avatar" className="font-titulo text-2xl font-semibold">Escolha seu avatar</h2>
-            <p id="descricao-avatar" className="mt-2 text-sm text-texto-suave">Toque em uma ilustração para usar no seu perfil.</p>
+            <p id="descricao-avatar" className="mt-2 text-sm text-texto-suave">Escolha uma ilustração ou use as iniciais do seu nome.</p>
           </div>
           <button type="button" aria-label="Fechar seleção de avatar" onClick={onFechar} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-texto-suave hover:bg-principal-suave focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-principal">
             <X size={20} aria-hidden="true" />
@@ -84,6 +86,17 @@ export function ModalAvatar({ aberto, atual, salvando, erro, onEscolher, onFecha
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          aria-pressed={atual === null}
+          disabled={salvando}
+          onClick={() => onEscolher(null)}
+          className={`mt-4 flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-principal disabled:opacity-60 ${atual === null ? 'border-principal bg-principal-suave text-principal' : 'border-borda hover:bg-principal-suave'}`}
+        >
+          <AvatarUsuario avatar={null} nome={nome} />
+          <span>Usar minhas iniciais</span>
+          {atual === null && <Check size={16} aria-hidden="true" className="ml-auto" />}
+        </button>
         {salvando && <p role="status" className="mt-4 text-sm text-texto-suave">Atualizando seu avatar...</p>}
       </div>
     </dialog>
