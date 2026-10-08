@@ -60,13 +60,17 @@ um SMTP de entrega no Keycloak. Contas existentes sem e-mail verificado também
 precisam confirmar seu endereço. A API rejeita tokens não verificados, inclusive
 tokens emitidos antes dessa configuração.
 
-Em **Minha conta** (`/minha-conta`), a pessoa pode enviar/remover foto, consultar
+Em **Minha conta** (`/minha-conta`), a pessoa pode escolher um dos seis avatares
+(ursinho, coelhinho, elefantinho, patinho, nuvem e lua) ou usar suas iniciais, consultar
 nome e e-mail, editar dados pessoais, alterar senha e sair. A edição de nome e
-senha abre o fluxo do Keycloak e retorna ao perfil. Fotos são privadas, vinculadas
-ao `sub` da conta e armazenadas no PostgreSQL (`perfil_usuario`); arquivos JPG,
-PNG e WebP de até 2 MB são normalizados para JPEG de até 512 px, sem metadados.
+senha abre o fluxo do Keycloak e retorna ao perfil. A escolha é vinculada ao `sub`
+da conta e armazenada no PostgreSQL (`perfil_usuario`). A API aceita somente os
+seis códigos do catálogo em `PUT /api/v1/perfil/avatar`; o envio de arquivos foi
+retirado. As ilustrações são arquivos WebP locais em `web/public/avatares`.
+Fotos cadastradas anteriormente são preservadas e exibidas até a pessoa escolher
+um avatar ou usar suas iniciais. A migração `c4e8a1b7d092` não altera essas fotos.
 Execute `docker compose exec api alembic upgrade head` antes de usar o perfil
-em um banco existente. Faça backup do banco para preservar as fotos.
+em um banco existente. Faça backup do banco para preservar os perfis e fotos antigas.
 
 Enxovais criados antes da autenticação têm `dono_id` vazio e não aparecem nas contas
 até que sejam associados ao proprietário correto. Com `KEYCLOAK_HABILITADO=false`,

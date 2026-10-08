@@ -7,12 +7,13 @@ import {
   KeyRound,
   LogOut,
   Pencil,
-  Camera,
+  Check,
 } from 'lucide-react'
 import { keycloak, keycloakHabilitado } from '../auth/keycloak'
 import { useAuth } from '../auth/AuthProvider'
 import { usePerfil } from '../hooks/usePerfil'
-import { removerFoto, salvarFoto } from '../api/perfil'
+import { removerAvatar, salvarAvatar } from '../api/perfil'
+import { AVATARES, imagemAvatar } from '../componentes/avatares'
 import { ErroApi } from '../api/cliente'
 import { Marca } from '../componentes/Marca'
 import { AvatarUsuario } from '../componentes/MinhaContaLink'
@@ -33,28 +34,28 @@ export default function MinhaConta() {
   const [erro, setErro] = useState<string | null>(null)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [redirecionando, setRedirecionando] = useState(false)
-  const foto = useMutation({
-    mutationFn: salvarFoto,
+  const avatar = useMutation({
+    mutationFn: salvarAvatar,
     onSuccess: (novo) => {
       qc.setQueryData(['perfil', keycloak.subject], novo)
-      setMensagem('Foto atualizada.')
+      setMensagem('Avatar atualizado.')
     },
     onError: (e) =>
       setErro(
         e instanceof ErroApi
           ? e.message
-          : 'Não foi possível atualizar sua foto.',
+          : 'Não foi possível atualizar seu avatar.',
       ),
   })
   const remover = useMutation({
-    mutationFn: removerFoto,
+    mutationFn: removerAvatar,
     onSuccess: () => {
-      qc.setQueryData(['perfil', keycloak.subject], { foto: null })
-      setMensagem('Foto removida.')
+      qc.setQueryData(['perfil', keycloak.subject], { foto: null, avatar: null })
+      setMensagem('Seu perfil voltou a usar suas iniciais.')
     },
     onError: (e) =>
       setErro(
-        e instanceof ErroApi ? e.message : 'Não foi possível remover sua foto.',
+        e instanceof ErroApi ? e.message : 'Não foi possível atualizar seu avatar.',
       ),
   })
   async function editar(action: 'UPDATE_PROFILE' | 'UPDATE_PASSWORD') {
@@ -75,7 +76,7 @@ export default function MinhaConta() {
     [p?.firstName, p?.lastName].filter(Boolean).join(' ') ||
     nomeUsuario ||
     'Minha conta'
-  const ocupado = foto.isPending || remover.isPending
+  const ocupado = avatar.isPending || remover.isPending
 
   return (
     <div className="min-h-screen bg-fundo">
@@ -124,72 +125,70 @@ export default function MinhaConta() {
               </p>
             )}
             <section
-              aria-label="Foto do perfil"
+              aria-label="Avatar do perfil"
+              aria-busy={ocupado}
               className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6"
             >
-              <div className="flex flex-wrap items-center gap-5">
-                <AvatarUsuario foto={perfil.data?.foto} nome={nome} grande />
-                <div className="space-y-3">
+              <div className="flex items-center gap-5">
+                <AvatarUsuario avatar={perfil.data?.avatar} foto={perfil.data?.foto} nome={nome} grande />
+                <div>
                   <h2 className="font-titulo text-xl font-semibold">
-                    Foto do perfil
+                    Seu avatar
                   </h2>
-                  <p className="text-sm text-texto-suave">
-                    JPG, PNG ou WebP de até 2 MB.
+                  <p className="mt-2 text-sm text-texto-suave">
+                    Escolha uma ilustração para acompanhar sua conta.
                   </p>
-                  <div className="flex flex-wrap gap-3">
-                    <label
-                      className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-principal px-4 py-3 text-sm text-white focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-principal ${ocupado || perfil.isLoading ? 'opacity-50' : ''}`}
-                    >
-                      <Camera size={16} aria-hidden="true" />
-                      {foto.isPending ? 'Enviando...' : 'Escolher foto'}
-                      <input
-                        aria-label="Escolher foto"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        className="sr-only"
-                        disabled={ocupado || perfil.isLoading}
-                        onChange={(e) => {
-                          const arquivo = e.target.files?.[0]
-                          e.target.value = ''
-                          setErro(null)
-                          setMensagem(null)
-                          if (!arquivo) return
-                          if (arquivo.size > 2 * 1024 * 1024) {
-                            setErro('Escolha uma foto de até 2 MB.')
-                            return
-                          }
-                          if (
-                            !['image/jpeg', 'image/png', 'image/webp'].includes(
-                              arquivo.type,
-                            )
-                          ) {
-                            setErro('Escolha uma imagem JPG, PNG ou WebP.')
-                            return
-                          }
-                          foto.mutate(arquivo)
-                        }}
-                      />
-                    </label>
-                    {perfil.data?.foto && (
-                      <Button
-                        type="button"
-                        variant="secundario"
-                        disabled={ocupado}
-                        onClick={() => {
-                          setErro(null)
-                          setMensagem(null)
-                          remover.mutate()
-                        }}
-                      >
-                        {remover.isPending ? 'Removendo...' : 'Remover foto'}
-                      </Button>
-                    )}
-                  </div>
                 </div>
               </div>
+              {perfil.data?.foto && (
+                <p className="mt-4 text-sm text-texto-suave">
+                  Você pode manter sua foto atual ou escolher um dos avatares abaixo.
+                </p>
+              )}
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label="Escolha seu avatar">
+                {AVATARES.map(({ codigo, nome: rotulo }) => {
+                  const selecionado = perfil.data?.avatar === codigo
+                  return (
+                    <button
+                      key={codigo}
+                      type="button"
+                      aria-label={`Escolher ${rotulo}`}
+                      aria-pressed={selecionado}
+                      disabled={ocupado || perfil.isLoading || perfil.isError}
+                      onClick={() => {
+                        if (selecionado) return
+                        setErro(null)
+                        setMensagem(null)
+                        avatar.mutate(codigo)
+                      }}
+                      className={`relative flex flex-col items-center gap-3 rounded-2xl border-2 px-3 py-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-principal disabled:cursor-wait disabled:opacity-60 ${selecionado ? 'border-principal bg-principal-suave' : 'border-borda bg-fundo hover:border-principal/50'}`}
+                    >
+                      <img src={imagemAvatar(codigo)} alt="" width={96} height={96} className="size-20 rounded-full object-cover sm:size-24" />
+                      <span className="text-sm font-medium text-texto">{rotulo}</span>
+                      {selecionado && <Check size={16} aria-hidden="true" className="absolute right-2 top-2 text-principal" />}
+                    </button>
+                  )
+                })}
+              </div>
+              {ocupado && <p className="mt-4 text-sm text-texto-suave">Atualizando seu avatar...</p>}
+              {(perfil.data?.avatar || perfil.data?.foto) && (
+                <Button
+                  type="button"
+                  variant="secundario"
+                  className="mt-5"
+                  disabled={ocupado || perfil.isError}
+                  onClick={() => {
+                    setErro(null)
+                    setMensagem(null)
+                    remover.mutate()
+                  }}
+                >
+                  Usar minhas iniciais
+                </Button>
+              )}
               {perfil.isError && (
                 <p role="alert" className="mt-3 text-sm text-alerta-texto">
-                  Não foi possível carregar sua foto.{' '}
+                  Não foi possível carregar seu avatar.{' '}
                   <button
                     className="min-h-11 underline"
                     onClick={() => void perfil.refetch()}

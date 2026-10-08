@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 import { keycloak } from '../auth/keycloak'
-import { getPerfil, salvarFoto, removerFoto } from '../api/perfil'
+import { getPerfil, salvarAvatar, removerAvatar } from '../api/perfil'
 import MinhaConta from './MinhaConta'
 
 vi.mock('../auth/keycloak', () => ({
@@ -27,8 +27,8 @@ vi.mock('../auth/AuthProvider', () => ({
 }))
 vi.mock('../api/perfil', () => ({
   getPerfil: vi.fn(),
-  salvarFoto: vi.fn(),
-  removerFoto: vi.fn(),
+  salvarAvatar: vi.fn(),
+  removerAvatar: vi.fn(),
 }))
 
 function abrir() {
@@ -46,7 +46,7 @@ function abrir() {
 
 describe('Minha conta', () => {
   it('mostra dados verificados e abre a edição de nome no Keycloak', async () => {
-    vi.mocked(getPerfil).mockResolvedValue({ foto: null })
+    vi.mocked(getPerfil).mockResolvedValue({ foto: null, avatar: null })
     abrir()
     expect(await screen.findByText('ana@example.com')).toBeInTheDocument()
     expect(screen.getByText('Ana Silva')).toBeInTheDocument()
@@ -59,48 +59,38 @@ describe('Minha conta', () => {
       redirectUri: `${window.location.origin}/minha-conta`,
     })
   })
-  it('envia e remove a foto, atualizando a página', async () => {
-    vi.mocked(getPerfil).mockResolvedValue({ foto: null })
-    vi.mocked(salvarFoto).mockResolvedValue({
-      foto: 'data:image/jpeg;base64,abc',
-    })
-    vi.mocked(removerFoto).mockResolvedValue(undefined)
+  it('escolhe um avatar e volta às iniciais', async () => {
+    vi.mocked(getPerfil).mockResolvedValue({ foto: null, avatar: null })
+    vi.mocked(salvarAvatar).mockResolvedValue({ foto: null, avatar: 'ursinho' })
+    vi.mocked(removerAvatar).mockResolvedValue(undefined)
     abrir()
-    await waitFor(() =>
-      expect(screen.getByLabelText('Escolher foto')).toBeEnabled(),
-    )
-    const arquivo = new File(['foto'], 'foto.png', { type: 'image/png' })
-    fireEvent.change(screen.getByLabelText('Escolher foto'), {
-      target: { files: [arquivo] },
-    })
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Foto atualizada.',
-    )
-    expect(salvarFoto).toHaveBeenCalledWith(arquivo, expect.anything())
-    fireEvent.click(screen.getByRole('button', { name: 'Remover foto' }))
-    await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent('Foto removida.'),
-    )
-    expect(
-      screen.queryByRole('button', { name: 'Remover foto' }),
-    ).not.toBeInTheDocument()
+    const escolha = await screen.findByRole('button', { name: 'Escolher Ursinho' })
+    await waitFor(() => expect(escolha).toBeEnabled())
+    fireEvent.click(escolha)
+    expect(await screen.findByRole('status')).toHaveTextContent('Avatar atualizado.')
+    expect(salvarAvatar).toHaveBeenCalledWith('ursinho', expect.anything())
+    expect(escolha).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Usar minhas iniciais' }))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Seu perfil voltou a usar suas iniciais.'))
+    expect(escolha).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('button', { name: 'Usar minhas iniciais' })).not.toBeInTheDocument()
   })
-  it('rejeita arquivo grande antes de enviar', async () => {
-    vi.mocked(getPerfil).mockResolvedValue({ foto: null })
+  it('mantém o avatar anterior quando a alteração falha', async () => {
+    vi.mocked(getPerfil).mockResolvedValue({ foto: null, avatar: 'lua' })
+    vi.mocked(salvarAvatar).mockRejectedValue(new Error('Falha de conexão'))
     abrir()
-    await waitFor(() =>
-      expect(screen.getByLabelText('Escolher foto')).toBeEnabled(),
-    )
-    fireEvent.change(screen.getByLabelText('Escolher foto'), {
-      target: {
-        files: [
-          new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'grande.png', {
-            type: 'image/png',
-          }),
-        ],
-      },
-    })
-    expect(await screen.findByRole('alert')).toHaveTextContent('até 2 MB')
-    expect(salvarFoto).not.toHaveBeenCalled()
+    const escolha = await screen.findByRole('button', { name: 'Escolher Patinho' })
+    await waitFor(() => expect(escolha).toBeEnabled())
+    fireEvent.click(escolha)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível atualizar seu avatar.')
+    expect(screen.getByRole('button', { name: 'Escolher Lua' })).toHaveAttribute('aria-pressed', 'true')
+    expect(escolha).toHaveAttribute('aria-pressed', 'false')
+  })
+  it('mostra a foto antiga sem permitir novos uploads', async () => {
+    vi.mocked(getPerfil).mockResolvedValue({ foto: 'data:image/jpeg;base64,abc', avatar: null })
+    abrir()
+    expect(await screen.findByText(/Você pode manter sua foto atual/)).toBeInTheDocument()
+    expect(document.querySelector('input[type="file"]')).toBeNull()
+    expect(screen.getAllByRole('button', { name: /^Escolher / })).toHaveLength(6)
   })
 })

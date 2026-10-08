@@ -250,7 +250,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/perfil/foto": {
+    "/api/v1/perfil/avatar": {
         parameters: {
             query?: never;
             header?: never;
@@ -258,11 +258,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Salvar Foto */
-        put: operations["salvar_foto_api_v1_perfil_foto_put"];
+        /** Salvar Avatar */
+        put: operations["salvar_avatar_api_v1_perfil_avatar_put"];
         post?: never;
-        /** Remover Foto */
-        delete: operations["remover_foto_api_v1_perfil_foto_delete"];
+        /** Remover Avatar */
+        delete: operations["remover_avatar_api_v1_perfil_avatar_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -296,6 +296,14 @@ export interface components {
             ativo_ate: string;
             /** Itens */
             itens: string[];
+        };
+        /** AvatarEntrada */
+        AvatarEntrada: {
+            /**
+             * Avatar
+             * @enum {string}
+             */
+            avatar: "ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua";
         };
         /**
          * CategoriaSaida
@@ -696,6 +704,8 @@ export interface components {
         app__rotas__perfil__PerfilSaida: {
             /** Foto */
             foto?: string | null;
+            /** Avatar */
+            avatar?: ("ursinho" | "coelhinho" | "elefantinho" | "patinho" | "nuvem" | "lua") | null;
         };
         /**
          * PerfilSaida
@@ -1270,14 +1280,18 @@ export interface operations {
             };
         };
     };
-    salvar_foto_api_v1_perfil_foto_put: {
+    salvar_avatar_api_v1_perfil_avatar_put: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AvatarEntrada"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1288,9 +1302,18 @@ export interface operations {
                     "application/json": components["schemas"]["app__rotas__perfil__PerfilSaida"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    remover_foto_api_v1_perfil_foto_delete: {
+    remover_avatar_api_v1_perfil_avatar_delete: {
         parameters: {
             query?: never;
             header?: never;

@@ -1,9 +1,7 @@
 import base64
-import io
-import warnings
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from PIL import Image, ImageOps, UnidentifiedImageError
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -12,12 +10,16 @@ from app.db.perfil import PerfilUsuario
 from app.db.sessao import obter_sessao
 
 router = APIRouter(prefix="/perfil", tags=["perfil"])
-MAXIMO_BYTES = 2 * 1024 * 1024
-MAXIMO_PIXELS = 16_000_000
+AvatarCodigo = Literal["ursinho", "coelhinho", "elefantinho", "patinho", "nuvem", "lua"]
 
 
 class PerfilSaida(BaseModel):
     foto: str | None = None
+    avatar: AvatarCodigo | None = None
+
+
+class AvatarEntrada(BaseModel):
+    avatar: AvatarCodigo
 
 
 def _dono(dono_id: str | None) -> str:
@@ -27,7 +29,10 @@ def _dono(dono_id: str | None) -> str:
 
 
 def _saida(perfil: PerfilUsuario | None) -> PerfilSaida:
-    return PerfilSaida(foto="data:image/jpeg;base64," + base64.b64encode(perfil.foto).decode() if perfil else None)
+    return PerfilSaida(
+        foto="data:image/jpeg;base64," + base64.b64encode(perfil.foto).decode() if perfil and perfil.foto else None,
+        avatar=perfil.avatar if perfil else None,
+    )
 
 
 @router.get("", response_model=PerfilSaida)
@@ -35,43 +40,22 @@ def ler(dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> PerfilSaida
     return _saida(sessao.get(PerfilUsuario, _dono(dono_id)))
 
 
-@router.put("/foto", response_model=PerfilSaida)
-async def salvar_foto(request: Request, dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> PerfilSaida:
+@router.put("/avatar", response_model=PerfilSaida)
+def salvar_avatar(entrada: AvatarEntrada, dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> PerfilSaida:
     dono = _dono(dono_id)
-    dados = bytearray()
-    async for parte in request.stream():
-        dados.extend(parte)
-        if len(dados) > MAXIMO_BYTES:
-            raise HTTPException(413, detail={"erro": "foto_grande", "mensagem": "Escolha uma foto de até 2 MB."})
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(io.BytesIO(dados)) as original:
-                if original.format not in ("JPEG", "PNG", "WEBP") or original.width * original.height > MAXIMO_PIXELS:
-                    raise ValueError("Formato ou dimensões inválidos")
-                original.load()
-                foto = ImageOps.exif_transpose(original)
-                foto.thumbnail((512, 512))
-                # Reencodar remove metadados e conteúdo extra do arquivo original.
-                rgba = foto.convert("RGBA")
-                fundo = Image.new("RGB", rgba.size, "white")
-                fundo.paste(rgba, mask=rgba.getchannel("A"))
-                buffer = io.BytesIO()
-                fundo.save(buffer, format="JPEG", quality=85, optimize=True)
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning):
-        raise HTTPException(422, detail={"erro": "foto_invalida", "mensagem": "Escolha uma imagem JPG, PNG ou WebP válida, com até 16 megapixels."})
     perfil = sessao.get(PerfilUsuario, dono)
     if perfil is None:
-        perfil = PerfilUsuario(dono_id=dono, foto=buffer.getvalue())
+        perfil = PerfilUsuario(dono_id=dono, avatar=entrada.avatar)
         sessao.add(perfil)
     else:
-        perfil.foto = buffer.getvalue()
+        perfil.avatar = entrada.avatar
+        perfil.foto = None
     sessao.commit()
     return _saida(perfil)
 
 
-@router.delete("/foto", status_code=204)
-def remover_foto(dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> Response:
+@router.delete("/avatar", status_code=204)
+def remover_avatar(dono_id: DonoId, sessao: Session = Depends(obter_sessao)) -> Response:
     perfil = sessao.get(PerfilUsuario, _dono(dono_id))
     if perfil:
         sessao.delete(perfil)
