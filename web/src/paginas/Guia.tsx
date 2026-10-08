@@ -18,7 +18,7 @@ function CartaoFicha({ ficha, id }: { ficha: FichaSaida; id: string }) {
   return (
     <Link
       to={`/enxoval/${id}/guia/${ficha.slug}`}
-      className="block rounded-2xl bg-superficie p-4 shadow-sm hover:shadow-md transition-shadow"
+      className="block rounded-3xl border border-borda bg-superficie p-5 transition-all hover:border-principal/40 hover:shadow-sm"
     >
       <div className="flex items-start justify-between gap-2">
         <h2 className="font-titulo font-semibold text-texto">{ficha.nome}</h2>
@@ -28,8 +28,12 @@ function CartaoFicha({ ficha, id }: { ficha: FichaSaida; id: string }) {
           </span>
         )}
       </div>
-      <p className="mt-1 text-sm text-texto-suave line-clamp-2">{ficha.para_que_serve}</p>
-      <p className="mt-2 text-xs text-texto-suave">{idadeTexto(ficha.idade_inicio_meses)}</p>
+      <p className="mt-1 text-sm text-texto-suave line-clamp-2">
+        {ficha.para_que_serve}
+      </p>
+      <p className="mt-2 text-xs text-texto-suave">
+        {idadeTexto(ficha.idade_inicio_meses)}
+      </p>
     </Link>
   )
 }
@@ -39,15 +43,19 @@ export default function Guia() {
   const { data: enxoval, isLoading, isError, error } = usePlanilha(id)
 
   if (isLoading || isError || !enxoval) {
-    return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    return (
+      <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    )
   }
 
   return (
     <div className="min-h-screen bg-fundo">
       <CabecalhoEnxoval enxoval={enxoval} abaAtiva="guia" />
 
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <h1 className="mb-6 font-titulo text-xl font-semibold text-texto">Guia dos itens</h1>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <h1 className="mb-6 font-titulo text-3xl font-semibold text-texto">
+          Guia dos itens
+        </h1>
 
         {enxoval.fichas.length === 0 ? (
           <p className="text-texto-suave">Nenhuma ficha disponível.</p>

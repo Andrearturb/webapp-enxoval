@@ -1,45 +1,79 @@
+import { Check, Heart, ShoppingBag } from 'lucide-react'
 import type { EnxovalSaida } from '../../api/enxovais'
 
-interface Props {
-  enxoval: EnxovalSaida
-}
-
-export function ResumoPlanilha({ enxoval }: Props) {
+export function ResumoPlanilha({ enxoval }: { enxoval: EnxovalSaida }) {
   const { progresso, resumo } = enxoval
-  const pct = progresso.percentual
-
   return (
-    <div className="rounded-2xl bg-superficie p-4 shadow-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm text-texto-suave">
-          {progresso.atendidas} de {progresso.total_unidades} unidades
+    <section
+      className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6"
+      aria-label="Resumo do enxoval"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[.14em] text-principal">
+            Um passo de cada vez
+          </p>
+          <h2 className="mt-2 text-xl font-semibold sm:text-2xl">
+            Seu enxoval está tomando forma
+          </h2>
+        </div>
+        <span className="rounded-2xl bg-principal-suave px-3 py-2 font-titulo text-2xl font-semibold text-principal">
+          {progresso.percentual}%
         </span>
-        <span className="font-medium text-principal">{pct}%</span>
       </div>
-
-      {/* Barra de progresso */}
+      <p className="mt-3 text-sm text-texto-suave">
+        {progresso.atendidas} de {progresso.total_unidades} unidades já
+        organizadas
+      </p>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-principal-suave"
+        className="mt-3 h-2 overflow-hidden rounded-full bg-principal-suave"
         role="progressbar"
-        aria-valuenow={pct}
+        aria-valuenow={progresso.percentual}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Progresso do enxoval"
       >
         <div
           className="h-full rounded-full bg-principal transition-all duration-300"
-          style={{ width: `${pct}%` }}
+          style={{ width: `${progresso.percentual}%` }}
         />
       </div>
-
-      <div className="mt-3 flex flex-wrap gap-3 text-sm text-texto-suave">
-        <span>Lavar a cada {resumo.dias_sem_lavar} dia{resumo.dias_sem_lavar > 1 ? 's' : ''}</span>
-        {resumo.aviso_volume_alto && (
-          <span className="rounded-md bg-alerta-fundo px-2 py-0.5 text-alerta-texto">
-            Volume alto — considere comprar mais aos poucos
-          </span>
-        )}
+      <div className="mt-5 grid grid-cols-3 divide-x divide-borda">
+        <div className="pr-3">
+          <Check size={16} className="mb-1 text-principal" aria-hidden="true" />
+          <p className="text-xl font-semibold tabular-nums">
+            {progresso.atendidas}
+          </p>
+          <p className="mt-0.5 text-xs text-texto-suave">Já tenho</p>
+        </div>
+        <div className="px-4">
+          <ShoppingBag
+            size={16}
+            className="mb-1 text-principal"
+            aria-hidden="true"
+          />
+          <p className="text-xl font-semibold tabular-nums">
+            {progresso.faltam}
+          </p>
+          <p className="mt-0.5 text-xs text-texto-suave">Ainda faltam</p>
+        </div>
+        <div className="pl-4">
+          <Heart size={16} className="mb-1 text-principal" aria-hidden="true" />
+          <p className="text-xl font-semibold tabular-nums">
+            {progresso.total_unidades}
+          </p>
+          <p className="mt-0.5 text-xs text-texto-suave">Na sua lista</p>
+        </div>
       </div>
-    </div>
+      <p className="mt-5 border-t border-borda pt-3 text-xs text-texto-suave">
+        Pensado para lavar a cada {resumo.dias_sem_lavar} dia
+        {resumo.dias_sem_lavar > 1 ? 's' : ''}.
+      </p>
+      {resumo.aviso_volume_alto && (
+        <p className="mt-2 rounded-xl bg-areia/50 px-3 py-2 text-xs text-texto-suave">
+          Volume alto — considere comprar mais aos poucos
+        </p>
+      )}
+    </section>
   )
 }

@@ -7,11 +7,19 @@ interface Props {
   onFaseFiltrada: (codigo: string | null) => void
 }
 
-export function PainelFases({ fases, linhas, faseFiltrada, onFaseFiltrada }: Props) {
+export function PainelFases({
+  fases,
+  linhas,
+  faseFiltrada,
+  onFaseFiltrada,
+}: Props) {
   // Contagem de itens por fase
   const contagemPorFase = new Map<string, number>()
   for (const linha of linhas) {
-    contagemPorFase.set(linha.fase_codigo, (contagemPorFase.get(linha.fase_codigo) ?? 0) + 1)
+    contagemPorFase.set(
+      linha.fase_codigo,
+      (contagemPorFase.get(linha.fase_codigo) ?? 0) + 1,
+    )
   }
 
   // Determina a ordem da fase atual para saber quais são "passadas"
@@ -25,7 +33,9 @@ export function PainelFases({ fases, linhas, faseFiltrada, onFaseFiltrada }: Pro
 
     if (ePassada) {
       // Fase passada: mostrar se tem itens com faltam > 0
-      const temPendentes = linhas.some((l) => l.fase_codigo === fase.codigo && l.faltam > 0)
+      const temPendentes = linhas.some(
+        (l) => l.fase_codigo === fase.codigo && l.faltam > 0,
+      )
       return temPendentes
     }
 
@@ -45,14 +55,17 @@ export function PainelFases({ fases, linhas, faseFiltrada, onFaseFiltrada }: Pro
         const indiceFase = fases.findIndex((f) => f.codigo === fase.codigo)
         const ePassada = ordemAtual >= 0 && indiceFase < ordemAtual
         const temPendentes =
-          ePassada && linhas.some((l) => l.fase_codigo === fase.codigo && l.faltam > 0)
+          ePassada &&
+          linhas.some((l) => l.fase_codigo === fase.codigo && l.faltam > 0)
         const eSelecionada = faseFiltrada === fase.codigo
         const eAtual = fase.atual
 
-        const classeBase = 'relative flex shrink-0 flex-col items-start rounded-xl px-3 py-2 text-sm transition-colors'
-        const classeEstado = eSelecionada || eAtual
-          ? 'bg-principal text-white font-semibold'
-          : 'bg-superficie text-texto hover:bg-principal-suave'
+        const classeBase =
+          'relative flex min-h-16 shrink-0 flex-col items-start rounded-2xl border border-borda px-4 py-3 text-sm transition-colors'
+        const classeEstado =
+          eSelecionada || eAtual
+            ? 'bg-principal text-white font-semibold'
+            : 'bg-superficie text-texto hover:bg-principal-suave'
 
         return (
           <button
@@ -63,7 +76,7 @@ export function PainelFases({ fases, linhas, faseFiltrada, onFaseFiltrada }: Pro
             aria-pressed={eSelecionada}
           >
             <span className="font-medium leading-snug">{fase.nome}</span>
-            <span className="mt-0.5 text-xs opacity-80">
+            <span className="mt-0.5 text-xs">
               {count} {count === 1 ? 'item' : 'itens'}
             </span>
             {temPendentes && (

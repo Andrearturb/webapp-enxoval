@@ -2,169 +2,118 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title>Meu enxoval · {{ cidade }}</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    font-size: 10pt;
-    color: #2F3A33;
-    background: #FFFFFF;
-    padding: 20mm 15mm;
-  }
-
-  /* ── cabeçalho ── */
-  .cabecalho {
-    margin-bottom: 6mm;
-    border-bottom: 2px solid #4F6B57;
-    padding-bottom: 4mm;
-  }
-  .cabecalho h1 {
-    font-size: 16pt;
-    font-weight: bold;
-    color: #4F6B57;
-  }
-  .cabecalho .meta {
-    font-size: 9pt;
-    color: #5A6660;
-    margin-top: 2mm;
-  }
-
-  /* ── progresso ── */
-  .progresso {
-    display: flex;
-    gap: 8mm;
-    background: #EEF1EA;
-    border-radius: 4mm;
-    padding: 3mm 5mm;
-    margin-bottom: 6mm;
-    font-size: 9pt;
-  }
-  .progresso .num { font-size: 13pt; font-weight: bold; color: #4F6B57; }
-
-  /* ── categoria ── */
-  .categoria {
-    margin-bottom: 5mm;
-    page-break-inside: avoid;
-  }
-  .categoria h2 {
-    font-size: 11pt;
-    font-weight: bold;
-    background: #EEF1EA;
-    color: #2F3A33;
-    padding: 2mm 3mm;
-    border-left: 3px solid #4F6B57;
-    margin-bottom: 1mm;
-  }
-
-  /* ── tabela de itens ── */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9pt;
-  }
-  thead th {
-    background: #4F6B57;
-    color: #FFFFFF;
-    font-weight: bold;
-    text-align: left;
-    padding: 2mm 2.5mm;
-  }
-  tbody tr:nth-child(even) { background: #F7F5EE; }
-  tbody tr.faltando { background: #F7E4DF; }
-  tbody td { padding: 1.5mm 2.5mm; vertical-align: top; }
-  .num-col { text-align: right; }
-  .prioridade-essencial { color: #874129; font-weight: bold; }
-  .prioridade-util { color: #36513D; }
-  .prioridade-pode_esperar { color: #5E4B2A; }
-  .faltam-zero { color: #5A6660; }
-  .faltam-positivo { font-weight: bold; color: #6E2F2A; }
-
-  /* ── rodapé ── */
-  .rodape {
-    margin-top: 8mm;
-    border-top: 1px solid #EEF1EA;
-    padding-top: 3mm;
-    font-size: 8pt;
-    color: #5A6660;
-  }
-
+  @font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-regular.woff"); font-weight: 400; }
+  @font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-semibold.woff"); font-weight: 600; }
+  @font-face { font-family: "Lora"; src: url("assets/fonts/lora-semibold.woff"); font-weight: 600; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "DM Sans", sans-serif; font-size: 9pt; line-height: 1.45; color: #2F3A33; }
   @page {
     size: A4 portrait;
-    margin: 15mm;
-    @bottom-center {
-      content: "Página " counter(page) " de " counter(pages);
-      font-size: 8pt;
-      color: #5A6660;
-    }
+    margin: 18mm 15mm 20mm;
+    @top-left { content: "ENXOVAL INTELIGENTE"; font-family: "DM Sans"; font-size: 7pt; letter-spacing: .9pt; color: #4F6B57; }
+    @top-right { content: "SUA LISTA PERSONALIZADA"; font-family: "DM Sans"; font-size: 6.5pt; color: #5A6660; }
+    @bottom-left { content: "Preparar também é cuidar."; font-family: "Lora"; font-size: 8pt; color: #4F6B57; }
+    @bottom-right { content: counter(page) " / " counter(pages); font-family: "DM Sans"; font-size: 8pt; color: #5A6660; }
   }
+  h1, h2, p { margin: 0; }
+  h1, h2 { font-family: "Lora", serif; font-weight: 600; }
+  .cabecalho { padding: 5mm 0 6mm; border-bottom: 1px solid #E5E8DF; margin-bottom: 6mm; }
+  .marca { display: table; margin-bottom: 5mm; }
+  .marca svg { vertical-align: middle; margin-right: 2.5mm; }
+  .marca span { font-family: "Lora"; font-size: 12pt; font-weight: 600; vertical-align: middle; }
+  .eyebrow { font-size: 7pt; font-weight: 600; letter-spacing: 1.2pt; text-transform: uppercase; color: #4F6B57; margin-bottom: 2mm; }
+  h1 { font-size: 25pt; line-height: 1.2; }
+  .intro { margin-top: 3mm; font-size: 9pt; color: #5A6660; }
+  .meta { width: 100%; margin-top: 5mm; table-layout: fixed; border-collapse: collapse; }
+  .meta td { padding: 0; font-size: 8pt; color: #5A6660; }
+  .meta strong { color: #2F3A33; font-weight: 600; }
+  .progresso { padding: 5mm; border: 1px solid #E5E8DF; border-radius: 4mm; background: #F7F5EE; margin-bottom: 6mm; break-inside: avoid; }
+  .progress-title { width: 100%; border-collapse: collapse; }
+  .progress-title td { padding: 0; font-size: 8pt; }
+  .progress-title .percentual { text-align: right; font-weight: 600; font-size: 13pt; color: #4F6B57; }
+  .barra { height: 1.8mm; background: #E5E8DF; border-radius: 2mm; overflow: hidden; margin: 2.5mm 0 4mm; }
+  .barra span { display: block; height: 100%; background: #4F6B57; border-radius: 2mm; }
+  .estatisticas { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .estatisticas td { width: 33.333%; padding: 0 4mm; border-left: 1px solid #E5E8DF; vertical-align: top; }
+  .estatisticas td:first-child { padding-left: 0; border-left: none; }
+  .estatisticas .num { display: block; font-size: 18pt; font-weight: 600; line-height: 1.2; color: #4F6B57; }
+  .estatisticas .legenda { display: block; margin-top: 1.5mm; font-size: 8pt; color: #5A6660; }
+  .guia { margin-bottom: 6mm; font-size: 8pt; color: #5A6660; }
+  .guia strong { color: #2F3A33; font-weight: 600; }
+  .categoria { margin-bottom: 6mm; }
+  .categoria h2 { font-size: 13pt; margin-bottom: 2.5mm; padding-top: 1mm; break-after: avoid; }
+  .itens { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 8pt; }
+  .itens thead { display: table-header-group; }
+  .itens th { background: #EEF1EA; color: #36513D; font-size: 7pt; font-weight: 600; text-align: left; padding: 2.5mm 1.5mm; border-bottom: 1px solid #D6DFD2; }
+  .itens th:first-child { border-radius: 2mm 0 0 0; }
+  .itens th:last-child { border-radius: 0 2mm 0 0; }
+  .itens tbody tr { break-inside: avoid; }
+  .itens td { padding: 2.5mm 1.5mm; vertical-align: middle; border-bottom: 1px solid #E5E8DF; overflow-wrap: break-word; }
+  .itens tbody tr:nth-child(even) { background: #FAFAF7; }
+  .itens .item-nome { font-weight: 600; }
+  .variante { display: block; font-size: 7pt; color: #5A6660; margin-top: .5mm; }
+  .itens .num-col { text-align: center; font-variant-numeric: tabular-nums; }
+  .prioridade { font-size: 7pt; }
+  .prioridade-essencial { color: #874129; }
+  .prioridade-util { color: #36513D; }
+  .prioridade-pode_esperar { color: #5E4B2A; }
+  .faltam-positivo { display: inline-block; min-width: 5mm; padding: .5mm 1mm; border-radius: 1mm; background: #EDE4D3; color: #5E4B2A; font-weight: 600; }
+  .faltam-zero { color: #4F6B57; }
+  .rodape { margin-top: 7mm; padding-top: 3mm; border-top: 1px solid #E5E8DF; font-size: 7pt; line-height: 1.5; color: #5A6660; break-inside: avoid; }
 </style>
 </head>
 <body>
-
-<div class="cabecalho">
-  <h1>Enxoval Inteligente</h1>
-  <p class="meta">
-    {{ cidade }} · Data prevista: {{ data_prevista }} ·
-    Gerado em {{ gerado_em }}
-  </p>
-</div>
-
-<div class="progresso">
-  <div>
-    <div class="num">{{ percentual }}%</div>
-    concluído
+<header class="cabecalho">
+  <div class="marca">
+    <svg width="29" height="29" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="10" fill="#4F6B57"/>
+      <path d="M7 22c2 6 16 6 18 0M16 22V11M16 16C8 16 7 11 8 7c6 0 9 3 8 9ZM16 13c0-6 4-8 9-8 1 5-3 9-9 8Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg><span>Enxoval Inteligente</span>
   </div>
-  <div>
-    <div class="num">{{ atendidas }}</div>
-    de {{ total }} unidades atendidas
-  </div>
-  <div>
-    <div class="num">{{ faltam }}</div>
-    faltando
-  </div>
-</div>
-
+  <p class="eyebrow">Feito para sua família</p>
+  <h1>Seu enxoval, com carinho.</h1>
+  <p class="intro">Uma lista para preparar a chegada do bebê, um passo de cada vez.</p>
+  <table class="meta"><tr>
+    <td><strong>{{ cidade }}</strong><br>Previsão: {{ data_prevista }}</td>
+    <td style="text-align:right">Atualizado em {{ gerado_em }}<br>Enxoval {{ id_curto }}</td>
+  </tr></table>
+</header>
+<section class="progresso">
+  <table class="progress-title"><tr><td>Seu enxoval está tomando forma</td><td class="percentual">{{ percentual }}%</td></tr></table>
+  <div class="barra"><span style="width: {{ percentual }}%"></span></div>
+  <table class="estatisticas"><tr>
+    <td><span class="num">{{ atendidas }}</span><span class="legenda">unidades que já tenho</span></td>
+    <td><span class="num">{{ faltam }}</span><span class="legenda">unidades que ainda faltam</span></td>
+    <td><span class="num">{{ total }}</span><span class="legenda">unidades na minha lista</span></td>
+  </tr></table>
+</section>
+<p class="guia"><strong>Como usar:</strong> registre o que comprou, ganhou ou já tinha. A coluna “Faltam” mostra o próximo passo. Você pode organizar tudo aos poucos.</p>
 {% for categoria in categorias %}
-<div class="categoria">
+<section class="categoria">
   <h2>{{ categoria.nome }}</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Item</th>
-        <th>Tam.</th>
-        <th class="num-col">Qtd.</th>
-        <th>Prioridade</th>
-        <th class="num-col">Comprada</th>
-        <th class="num-col">Ganhada</th>
-        <th class="num-col">Já tinha</th>
-        <th class="num-col">Faltam</th>
-      </tr>
-    </thead>
+  <table class="itens">
+    <colgroup><col style="width:31%"><col style="width:5%"><col style="width:6%"><col style="width:14%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:11%"></colgroup>
+    <thead><tr>
+      <th>Item</th><th class="num-col">Tam.</th><th class="num-col">Qtd.</th><th>Prioridade</th>
+      <th class="num-col">Comprei</th><th class="num-col">Ganhei</th><th class="num-col">Já tinha</th><th class="num-col">Faltam</th>
+    </tr></thead>
     <tbody>
       {% for linha in categoria.linhas %}
-      <tr class="{{ 'faltando' if linha.faltam > 0 else '' }}">
-        <td>{{ linha.nome }}{% if linha.rotulo_variante %} ({{ linha.rotulo_variante }}){% endif %}</td>
-        <td>{{ linha.tamanho or '' }}</td>
+      <tr>
+        <td><span class="item-nome">{{ linha.nome }}</span>{% if linha.rotulo_variante %}<span class="variante">{{ linha.rotulo_variante }}</span>{% endif %}</td>
+        <td class="num-col">{{ linha.tamanho or '—' }}</td>
         <td class="num-col">{{ linha.quantidade }}</td>
-        <td class="prioridade-{{ linha.prioridade }}">{{ linha.rotulo_prioridade }}</td>
-        <td class="num-col">{{ linha.comprada }}</td>
-        <td class="num-col">{{ linha.ganhada }}</td>
-        <td class="num-col">{{ linha.ja_tinha }}</td>
-        <td class="num-col {{ 'faltam-positivo' if linha.faltam > 0 else 'faltam-zero' }}">
-          {{ linha.faltam }}
-        </td>
+        <td class="prioridade prioridade-{{ linha.prioridade }}">{{ linha.rotulo_prioridade }}</td>
+        <td class="num-col">{{ linha.comprada }}</td><td class="num-col">{{ linha.ganhada }}</td><td class="num-col">{{ linha.ja_tinha }}</td>
+        <td class="num-col"><span class="{{ 'faltam-positivo' if linha.faltam > 0 else 'faltam-zero' }}">{{ linha.faltam }}</span></td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-</div>
+</section>
 {% endfor %}
-
-<div class="rodape">
-  Enxoval Inteligente · As marcas e regras de segurança estão em processo de validação.
-  Consulte seu pediatra e fontes oficiais (SBP, INMETRO, CONTRAN) antes de tomar decisões.
-</div>
-
+<footer class="rodape">Enxoval Inteligente · As marcas e regras de segurança estão em processo de validação. Consulte seu pediatra e fontes oficiais (SBP, INMETRO, CONTRAN) antes de tomar decisões.</footer>
 </body>
 </html>

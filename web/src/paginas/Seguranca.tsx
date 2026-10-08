@@ -39,7 +39,8 @@ function CardAlerta({ alerta }: { alerta: AlertaSaida }) {
         </span>
       </div>
       <p className="mt-2 text-xs text-alerta-texto">
-        Ativo de {formatarData(alerta.ativo_a_partir)} a {formatarData(alerta.ativo_ate)}
+        Ativo de {formatarData(alerta.ativo_a_partir)} a{' '}
+        {formatarData(alerta.ativo_ate)}
       </p>
     </li>
   )
@@ -51,7 +52,9 @@ export default function Seguranca() {
   const [temaAtivo, setTemaAtivo] = useState<TemaSeguranca | 'todos'>('todos')
 
   if (isLoading || isError || !enxoval) {
-    return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    return (
+      <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    )
   }
 
   // Filtra apenas temas que têm alertas no enxoval
@@ -69,15 +72,22 @@ export default function Seguranca() {
     <div className="min-h-screen bg-fundo">
       <CabecalhoEnxoval enxoval={enxoval} abaAtiva="seguranca" />
 
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <h1 className="mb-2 font-titulo text-xl font-semibold text-texto">Segurança</h1>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <h1 className="mb-2 font-titulo text-3xl font-semibold text-texto">
+          Segurança
+        </h1>
         <p className="mb-5 text-sm text-texto-suave">
-          Regras baseadas em recomendações da SBP, INMETRO e CONTRAN. Confirme com seu pediatra.
+          Regras baseadas em recomendações da SBP, INMETRO e CONTRAN. Confirme
+          com seu pediatra.
         </p>
 
         {/* Filtros de tema */}
         {filtrosVisiveis.length > 1 && (
-          <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Filtrar por tema">
+          <div
+            className="mb-5 flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filtrar por tema"
+          >
             {filtrosVisiveis.map(({ valor, rotulo }) => (
               <button
                 key={valor}

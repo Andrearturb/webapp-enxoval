@@ -5,7 +5,11 @@ type Origem = 'comprada' | 'ganhada' | 'ja_tinha'
 interface Props {
   linha: LinhaSaida
   destacarJaTinha: boolean
-  onMarcar: (marcacao: { comprada: number; ganhada: number; ja_tinha: number }) => void
+  onMarcar: (marcacao: {
+    comprada: number
+    ganhada: number
+    ja_tinha: number
+  }) => void
   onCompletar: (origem: Origem) => void
 }
 
@@ -15,7 +19,12 @@ const ORIGENS: { valor: Origem; rotulo: string }[] = [
   { valor: 'ja_tinha', rotulo: 'Já tinha' },
 ]
 
-export function ContadorMarcacao({ linha, destacarJaTinha, onMarcar, onCompletar }: Props) {
+export function ContadorMarcacao({
+  linha,
+  destacarJaTinha,
+  onMarcar,
+  onCompletar,
+}: Props) {
   const origens = destacarJaTinha
     ? [ORIGENS[2], ORIGENS[0], ORIGENS[1]]
     : ORIGENS
@@ -41,15 +50,15 @@ export function ContadorMarcacao({ linha, destacarJaTinha, onMarcar, onCompletar
   return (
     <div className="mt-2 flex flex-col gap-2">
       {origens.map(({ valor, rotulo }) => (
-        <div key={valor} className="flex items-center gap-2">
-          <span className="w-20 text-xs text-texto-suave">{rotulo}</span>
+        <div key={valor} className="flex items-center justify-between gap-3">
+          <span className="text-sm text-texto-suave">{rotulo}</span>
           <div className="flex items-center gap-1">
             <button
               type="button"
               aria-label={`- ${rotulo}`}
               onClick={() => decrementar(valor)}
               disabled={linha[valor] <= 0}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-principal-suave text-principal disabled:opacity-30"
+              className="flex size-11 items-center justify-center rounded-xl border border-borda bg-superficie text-principal disabled:opacity-40"
             >
               −
             </button>
@@ -58,7 +67,7 @@ export function ContadorMarcacao({ linha, destacarJaTinha, onMarcar, onCompletar
               type="button"
               aria-label={`+ ${rotulo}`}
               onClick={() => incrementar(valor)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-principal-suave text-principal"
+              className="flex size-11 items-center justify-center rounded-xl border border-borda bg-superficie text-principal"
             >
               +
             </button>
@@ -69,7 +78,7 @@ export function ContadorMarcacao({ linha, destacarJaTinha, onMarcar, onCompletar
         <button
           type="button"
           onClick={() => onCompletar('comprada')}
-          className="mt-1 self-start rounded-xl bg-principal px-3 py-1.5 text-xs text-white"
+          className="mt-2 min-h-11 self-start rounded-xl bg-principal px-4 py-2 text-xs font-medium text-white"
         >
           Marcar tudo como comprada
         </button>

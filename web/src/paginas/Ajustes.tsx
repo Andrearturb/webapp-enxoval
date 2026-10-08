@@ -9,6 +9,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { CabecalhoEnxoval } from './planilha/CabecalhoEnxoval'
 import { EstadoPagina } from './planilha/EstadoPagina'
 import { Button } from '../componentes/ui/button'
+import { Download, FileSpreadsheet, FileText } from 'lucide-react'
 
 const ROTULOS_MORADIA: Record<string, string> = {
   apartamento: 'Apartamento',
@@ -49,14 +50,24 @@ export default function Ajustes() {
   const [erroApagar, setErroApagar] = useState<string | null>(null)
   const [erroExportar, setErroExportar] = useState<string | null>(null)
 
-  async function exportar(evento: React.MouseEvent<HTMLAnchorElement>, formato: string) {
+  async function exportar(
+    evento: React.MouseEvent<HTMLAnchorElement>,
+    formato: string,
+  ) {
     if (!keycloakHabilitado) return
     evento.preventDefault()
     setErroExportar(null)
     try {
-      await apiDownload(`/enxovais/${id}/exportar.${formato}`, `enxoval-${id}.${formato}`)
+      await apiDownload(
+        `/enxovais/${id}/exportar.${formato}`,
+        `enxoval-${id}.${formato}`,
+      )
     } catch (erro) {
-      setErroExportar(erro instanceof ErroApi ? erro.message : 'Não foi possível exportar. Tente de novo.')
+      setErroExportar(
+        erro instanceof ErroApi
+          ? erro.message
+          : 'Não foi possível exportar. Tente de novo.',
+      )
     }
   }
 
@@ -68,17 +79,25 @@ export default function Ajustes() {
       navigate('/meus-enxovais', { replace: true })
     },
     onError: (e) => {
-      setErroApagar(e instanceof ErroApi ? e.message : 'Não foi possível apagar. Tente de novo.')
+      setErroApagar(
+        e instanceof ErroApi
+          ? e.message
+          : 'Não foi possível apagar. Tente de novo.',
+      )
       setConfirmandoApagar(false)
     },
   })
 
   if (isLoading || isError || !enxoval) {
-    return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    return (
+      <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    )
   }
 
   const r = enxoval.respostas
-  const dataFormatada = new Date(r.data_prevista + 'T12:00:00').toLocaleDateString('pt-BR', {
+  const dataFormatada = new Date(
+    r.data_prevista + 'T12:00:00',
+  ).toLocaleDateString('pt-BR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -88,27 +107,52 @@ export default function Ajustes() {
     <div className="min-h-screen bg-fundo">
       <CabecalhoEnxoval enxoval={enxoval} abaAtiva="ajustes" />
 
-      <main className="mx-auto max-w-2xl space-y-5 px-4 py-6">
-        <h1 className="font-titulo text-xl font-semibold text-texto">Ajustes</h1>
+      <main className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+        <h1 className="font-titulo text-3xl font-semibold text-texto">
+          Ajustes
+        </h1>
 
         {/* Resumo das respostas */}
-        <section className="rounded-2xl bg-superficie p-4 shadow-sm">
-          <h2 className="mb-3 font-semibold text-texto">Respostas do questionário</h2>
+        <section className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6">
+          <h2 className="mb-3 font-semibold text-texto">
+            Respostas do questionário
+          </h2>
           <div className="divide-y divide-principal-suave">
-            <RespostaItem rotulo="Cidade" valor={`${r.municipio.nome} - ${r.municipio.uf}`} />
+            <RespostaItem
+              rotulo="Cidade"
+              valor={`${r.municipio.nome} - ${r.municipio.uf}`}
+            />
             <RespostaItem rotulo="Data prevista" valor={dataFormatada} />
             <RespostaItem
               rotulo="Frequência de lavagem"
-              valor={ROTULOS_LAVAGEM[r.dias_entre_lavagens] ?? `A cada ${r.dias_entre_lavagens} dias`}
+              valor={
+                ROTULOS_LAVAGEM[r.dias_entre_lavagens] ??
+                `A cada ${r.dias_entre_lavagens} dias`
+              }
             />
-            <RespostaItem rotulo="Moradia" valor={ROTULOS_MORADIA[r.moradia] ?? r.moradia} />
-            <RespostaItem rotulo="Tem carro" valor={r.tem_carro ? 'Sim' : 'Não'} />
-            <RespostaItem rotulo="Orçamento" valor={ROTULOS_ORCAMENTO[r.orcamento] ?? r.orcamento} />
-            <RespostaItem rotulo="Primeiro filho" valor={r.primeiro_filho ? 'Sim' : 'Não'} />
+            <RespostaItem
+              rotulo="Moradia"
+              valor={ROTULOS_MORADIA[r.moradia] ?? r.moradia}
+            />
+            <RespostaItem
+              rotulo="Tem carro"
+              valor={r.tem_carro ? 'Sim' : 'Não'}
+            />
+            <RespostaItem
+              rotulo="Orçamento"
+              valor={ROTULOS_ORCAMENTO[r.orcamento] ?? r.orcamento}
+            />
+            <RespostaItem
+              rotulo="Primeiro filho"
+              valor={r.primeiro_filho ? 'Sim' : 'Não'}
+            />
           </div>
           <p className="mt-3 text-xs text-texto-suave">
             Para corrigir as respostas, crie um novo enxoval a partir da{' '}
-            <a href="/questionario/1" className="underline hover:text-principal">
+            <a
+              href="/questionario/1"
+              className="underline hover:text-principal"
+            >
               página inicial
             </a>
             .
@@ -116,7 +160,7 @@ export default function Ajustes() {
         </section>
 
         {/* Exportar */}
-        <section className="rounded-2xl bg-superficie p-4 shadow-sm">
+        <section className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6">
           <h2 className="mb-1 font-semibold text-texto">Exportar</h2>
           <p className="mb-3 text-sm text-texto-suave">
             Baixe sua lista personalizada em diferentes formatos.
@@ -126,36 +170,41 @@ export default function Ajustes() {
               href={`/api/v1/enxovais/${id}/exportar.xlsx`}
               onClick={(evento) => void exportar(evento, 'xlsx')}
               download
-              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-principal-suave px-4 py-3 text-sm font-medium text-principal transition-colors hover:bg-principal hover:text-white"
             >
-              📊 Baixar XLSX
+              <FileSpreadsheet size={17} aria-hidden="true" /> Baixar XLSX
             </a>
             <a
               href={`/api/v1/enxovais/${id}/exportar.csv`}
               onClick={(evento) => void exportar(evento, 'csv')}
               download
-              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-principal-suave px-4 py-3 text-sm font-medium text-principal transition-colors hover:bg-principal hover:text-white"
             >
-              📄 Baixar CSV
+              <FileText size={17} aria-hidden="true" /> Baixar CSV
             </a>
             <a
               href={`/api/v1/enxovais/${id}/exportar.pdf`}
               onClick={(evento) => void exportar(evento, 'pdf')}
               download
-              className="inline-flex items-center gap-1.5 rounded-xl bg-principal-suave px-3 py-2 text-sm font-medium text-texto-suave transition-colors hover:bg-principal hover:text-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-principal-suave px-4 py-3 text-sm font-medium text-principal transition-colors hover:bg-principal hover:text-white"
             >
-              📑 Baixar PDF
+              <Download size={17} aria-hidden="true" /> Baixar PDF
             </a>
           </div>
-          {erroExportar && <p role="alert" className="mt-3 text-alerta-texto">{erroExportar}</p>}
+          {erroExportar && (
+            <p role="alert" className="mt-3 text-alerta-texto">
+              {erroExportar}
+            </p>
+          )}
         </section>
 
         {/* Conta */}
         {nomeUsuario && (
-          <section className="rounded-2xl bg-superficie p-4 shadow-sm">
+          <section className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6">
             <h2 className="mb-1 font-semibold text-texto">Conta</h2>
             <p className="mb-3 text-sm text-texto-suave">
-              Logado como <span className="font-medium text-texto">{nomeUsuario}</span>.
+              Logado como{' '}
+              <span className="font-medium text-texto">{nomeUsuario}</span>.
             </p>
             <Button type="button" variant="secundario" onClick={sair}>
               Sair
@@ -164,14 +213,18 @@ export default function Ajustes() {
         )}
 
         {/* Apagar dados */}
-        <section className="rounded-2xl bg-superficie p-4 shadow-sm">
+        <section className="rounded-3xl border border-borda bg-superficie p-5 sm:p-6">
           <h2 className="mb-1 font-semibold text-texto">Apagar meus dados</h2>
           <p className="mb-3 text-sm text-texto-suave">
-            Remove permanentemente este enxoval e todas as quantidades marcadas. Não é possível desfazer.
+            Remove permanentemente este enxoval e todas as quantidades marcadas.
+            Não é possível desfazer.
           </p>
 
           {erroApagar && (
-            <p role="alert" className="mb-3 rounded-xl bg-alerta-fundo p-3 text-sm text-alerta-texto">
+            <p
+              role="alert"
+              className="mb-3 rounded-xl bg-alerta-fundo p-3 text-sm text-alerta-texto"
+            >
               {erroApagar}
             </p>
           )}

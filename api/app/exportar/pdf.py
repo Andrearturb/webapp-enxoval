@@ -20,10 +20,10 @@ from app.rotas.schemas import EnxovalSaida
 # Diretório deste módulo — onde template.html reside
 _TEMPLATE_DIR = pathlib.Path(__file__).parent
 
-# Ambiente Jinja2 com auto-escape desativado (HTML confiável gerado internamente)
+# Textos do catálogo são escapados antes de entrar no documento.
 _jinja_env = Environment(
     loader=FileSystemLoader(str(_TEMPLATE_DIR)),
-    autoescape=select_autoescape(enabled_extensions=()),
+    autoescape=select_autoescape(enabled_extensions=("html",)),
 )
 
 
@@ -105,6 +105,7 @@ def _construir_contexto(saida: EnxovalSaida, hoje: date) -> dict:
         )
 
     return {
+        "id_curto": str(saida.id)[:8].upper(),
         "cidade": cidade,
         "data_prevista": data_prevista,
         "gerado_em": gerado_em,
@@ -146,4 +147,4 @@ def gerar_pdf(saida: EnxovalSaida, hoje: date | None = None) -> bytes:
         Bytes do arquivo PDF (começa com ``%PDF``).
     """
     html_str = _renderizar(saida, hoje)
-    return HTML(string=html_str).write_pdf()
+    return HTML(string=html_str, base_url=str(_TEMPLATE_DIR)).write_pdf()

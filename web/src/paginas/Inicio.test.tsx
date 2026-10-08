@@ -37,7 +37,7 @@ describe('Inicio', () => {
 
   it('mostra os passos de como funciona', () => {
     renderInicio()
-    expect(screen.getByText('Como funciona')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Como funciona' })).toBeInTheDocument()
     expect(screen.getByText('Responda 6 perguntas')).toBeInTheDocument()
   })
 })

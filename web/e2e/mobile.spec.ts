@@ -27,7 +27,17 @@ test.describe('Mobile — Planilha', () => {
     const id = await criarEnxoval()
     await irParaPlanilha(page, id)
 
-    // As abas devem ser visíveis e clicáveis em tela pequena
+    // As cinco abas cabem no viewport sem precisar rolar horizontalmente.
+    const largura = page.viewportSize()!.width
+    for (const nome of ['Planilha', 'Roteiro', 'Guia', 'Segurança', 'Ajustes']) {
+      const aba = page.getByRole('link', { name: nome, exact: true })
+      await expect(aba).toBeVisible()
+      const caixa = await aba.boundingBox()
+      expect(caixa).not.toBeNull()
+      expect(caixa!.x).toBeGreaterThanOrEqual(0)
+      expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(largura)
+      expect(caixa!.height).toBeGreaterThanOrEqual(44)
+    }
     const abaRoteiro = page.getByRole('link', { name: 'Roteiro' })
     await expect(abaRoteiro).toBeVisible()
     await abaRoteiro.click()
@@ -60,6 +70,12 @@ test.describe('Mobile — Planilha', () => {
 
     await botao.click()
     await expect(page.getByRole('button', { name: /\+ comprada/i })).toBeVisible()
+    for (const nome of ['+ Comprada', '- Comprada', '+ Ganhada', '- Ganhada', '+ Já tinha', '- Já tinha']) {
+      const caixa = await page.getByRole('button', { name: nome, exact: true }).boundingBox()
+      expect(caixa).not.toBeNull()
+      expect(caixa!.width).toBeGreaterThanOrEqual(44)
+      expect(caixa!.height).toBeGreaterThanOrEqual(44)
+    }
   })
 })
 

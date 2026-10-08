@@ -32,3 +32,11 @@ def test_pdf_contem_nome_dos_itens(saida_exemplo):
     assert "Body" in html
     assert "Fralda descartável" in html
     assert "Curitiba" in html
+
+
+def test_textos_do_catalogo_sao_escapados_no_documento(saida_exemplo):
+    from app.exportar.pdf import _renderizar
+    saida_exemplo.linhas[0].nome = 'Body <especial> & algodão'
+    html = _renderizar(saida_exemplo)
+    assert 'Body &lt;especial&gt; &amp; algodão' in html
+    assert 'Body <especial>' not in html

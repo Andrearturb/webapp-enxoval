@@ -18,7 +18,7 @@ function CardFase({ fase }: { fase: FaseSaida }) {
     <li
       data-testid="fase"
       data-atual={fase.atual ? 'true' : 'false'}
-      className={`relative rounded-2xl p-4 shadow-sm ${
+      className={`relative rounded-3xl border border-borda p-5 ${
         fase.atual ? 'bg-principal text-white' : 'bg-superficie text-texto'
       }`}
     >
@@ -33,7 +33,9 @@ function CardFase({ fase }: { fase: FaseSaida }) {
       />
 
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className={`font-titulo font-semibold ${fase.atual ? 'text-white' : 'text-texto'}`}>
+        <h2
+          className={`font-titulo font-semibold ${fase.atual ? 'text-white' : 'text-texto'}`}
+        >
           {fase.nome}
         </h2>
         {fase.atual && (
@@ -43,11 +45,15 @@ function CardFase({ fase }: { fase: FaseSaida }) {
         )}
       </div>
 
-      <p className={`mt-0.5 text-sm ${fase.atual ? 'text-white' : 'text-texto-suave'}`}>
+      <p
+        className={`mt-0.5 text-sm ${fase.atual ? 'text-white' : 'text-texto-suave'}`}
+      >
         {formatarIntervalo(fase.inicio, fase.fim)}
       </p>
 
-      <p className={`mt-2 text-sm leading-relaxed ${fase.atual ? 'text-white' : 'text-texto'}`}>
+      <p
+        className={`mt-2 text-sm leading-relaxed ${fase.atual ? 'text-white' : 'text-texto'}`}
+      >
         {fase.texto}
       </p>
     </li>
@@ -59,15 +65,19 @@ export default function Roteiro() {
   const { data: enxoval, isLoading, isError, error } = usePlanilha(id)
 
   if (isLoading || isError || !enxoval) {
-    return <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    return (
+      <EstadoPagina isLoading={isLoading} isError={isError} error={error} />
+    )
   }
 
   return (
     <div className="min-h-screen bg-fundo">
       <CabecalhoEnxoval enxoval={enxoval} abaAtiva="roteiro" />
 
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <h1 className="mb-6 font-titulo text-xl font-semibold text-texto">Roteiro de compras</h1>
+      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <h1 className="mb-6 font-titulo text-3xl font-semibold text-texto">
+          Roteiro de compras
+        </h1>
 
         {enxoval.roteiro.length === 0 ? (
           <p className="text-texto-suave">Nenhuma fase disponível.</p>
