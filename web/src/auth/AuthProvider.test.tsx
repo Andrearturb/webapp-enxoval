@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('keycloak-js', () => ({
@@ -36,6 +36,20 @@ describe('AuthProvider', () => {
     render(<Provider><p>Conteúdo protegido</p></Provider>)
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível autenticar')
     expect(screen.queryByText('Conteúdo protegido')).not.toBeInTheDocument()
+    vi.unstubAllEnvs()
+  })
+
+  it('usa a raiz com barra final no retorno do logout permitido pelo realm', async () => {
+    vi.resetModules()
+    const { AuthProvider: Provider, useAuth } = await import('./AuthProvider')
+    const { keycloak: adapter } = await import('./keycloak')
+    function Conta() {
+      const { sair } = useAuth()
+      return <button onClick={sair}>Sair</button>
+    }
+    render(<Provider><Conta /></Provider>)
+    fireEvent.click(await screen.findByRole('button', { name: 'Sair' }))
+    expect(adapter.logout).toHaveBeenCalledWith({ redirectUri: `${window.location.origin}/` })
     vi.unstubAllEnvs()
   })
 })

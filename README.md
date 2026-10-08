@@ -37,14 +37,29 @@ KEYCLOAK_CLIENT_ID=webapp
 deve corresponder ao issuer público do realm, mesmo quando a URL interna é diferente.
 Para outro realm, ajuste também o sufixo de `KEYCLOAK_ISSUER`.
 
+No `.env` do `keycloak-server`, fixe `KC_HOSTNAME=http://localhost:8080` e
+`APP_ENXOVAL_URL=http://localhost:5180`. Se mudar uma porta, atualize as URLs
+correspondentes nos dois projetos. Confira o campo `issuer` em
+http://localhost:8080/realms/enxoval/.well-known/openid-configuration antes de
+ativar o app; ele deve ser igual a `KEYCLOAK_ISSUER`.
+
 Rode `docker compose run --rm api alembic upgrade head` e recrie API/frontend com
 `docker compose up -d --build api web`. A página inicial passa a exibir os enxovais
 da conta autenticada. As exportações também exigem token.
+
+Em uma janela anônima, http://localhost:5180 deve abrir o login. Use **Cadastre-se**
+para criar sua conta de família (a conta administrativa do Keycloak é separada).
+Após o cadastro/login, a aplicação abre **Meus enxovais**. **Sair** encerra a sessão
+e retorna ao login. Uma sessão já autenticada pode entrar diretamente pelo SSO.
 
 Enxovais criados antes da autenticação têm `dono_id` vazio e não aparecem nas contas
 até que sejam associados ao proprietário correto. Com `KEYCLOAK_HABILITADO=false`,
 o desenvolvimento local continua sem login. Em um build estático do frontend,
 forneça as variáveis `VITE_KEYCLOAK_*` durante `npm run build`.
+
+A ativação não associa enxovais antigos automaticamente e não apaga respostas ou
+marcações. A conta nova começa com sua própria lista vazia; uma associação futura
+deve conferir o proprietário correto antes de alterar `dono_id`.
 
 ## Banco e conteúdo
 

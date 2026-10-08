@@ -76,7 +76,7 @@ export function AuthProvider({ children }: Props) {
 
   function sair() {
     if (keycloakHabilitado) {
-      keycloak.logout({ redirectUri: window.location.origin })
+      keycloak.logout({ redirectUri: `${window.location.origin}/` })
     }
   }
 
